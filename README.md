@@ -6,9 +6,9 @@
 
 ## Intro
 
-[FFmpeg](http://ffmpeg.org/) is the defacto standard in command-line video editing, but it is really difficult to concatenate videos together using non-trivial transitions. Here are some [convoluted](https://superuser.com/questions/778762/crossfade-between-2-videos-using-ffmpeg) [examples](https://video.stackexchange.com/questions/17502/concate-two-video-file-with-fade-effect-with-ffmpeg-in-linux) of a simple cross-fade between two videos. FFmpeg filter graphs are extremely powerful, but for implementing transitions, they are overly complicated and error-prone.
+[FFmpeg](http://ffmpeg.org/) is the defacto standard in command-line video editing, but it is really difficult to concatenate videos together using non-trivial transitions. Here are some [convoluted](https://superuser.com/questions/778762/crossfade-between-2-videos-using-ffmpeg) [examples](https://video.stackexchange.com/questions/17502/concate-two-video-file-with-fade-effect-with-ffmpeg-in-linux) of a simple cross-fade between two videos. FFmpeg filter graphs are extremely powerful, but for implementing transitions, they are just too complicated and error-prone.
 
-On the other hand, [GL Transitions](https://gl-transitions.com/) is a great open source initiative spearheaded by [Gaëtan Renaudeau](https://github.com/gre) that is aimed at using GLSL to establish a universal [collection](https://gl-transitions.com/gallery) of transitions.
+[GL Transitions](https://gl-transitions.com/), on the other hand, is a great open source initiative spearheaded by [Gaëtan Renaudeau](https://github.com/gre) that is aimed at using GLSL to establish a universal [collection](https://gl-transitions.com/gallery) of transitions. The extremely simple transition spec makes it really easy to customize transitions or write your own as opposed to struggling with complex ffmpeg filter graphs.
 
 **This library is an ffmpeg extension that makes it easy to use gl-transitions in ffmpeg filter graphs.**
 
@@ -70,10 +70,10 @@ Note that ffmpeg filters separate their parameters with colons.
 
 ## Todo
 
-- add more examples to repo
 - **support default values for gl-transition uniforms**
   - this is the reason a lot of gl-transitions currently appear to not function properly
 - support general gl-transition uniforms
+- add more complicated filter graph examples to readme using concat and multiple, unique transitions
 - remove restriction that both inputs be the same size
 - add gl-transition logic for aspect ratios and resize mode
 - transpile webgl glsl to opengl glsl via angle
