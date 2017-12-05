@@ -1,6 +1,6 @@
 # ffmpeg-gl-transition
 
-> FFmpeg filter for applying [gl-transitions](https://gl-transitions.com/) between video streams.
+> FFmpeg filter for applying GLSL transitions between video streams ([gl-transitions](https://gl-transitions.com/)).
 
 ![](https://raw.githubusercontent.com/transitive-bullshit/ffmpeg-gl-transition/master/test/crosswarp.gif)
 
