@@ -62,8 +62,8 @@ Advanced:
 ```
 
 Params:
-- **duration** (optional *float*; default=1) length in seconds for the transition to last. Any frames after this duration will pass through the second input.
-- **offset** (optional *float*; default=0) length in seconds to wait before beginning the transition. Any frames before this offset will pass through the first input.
+- **duration** (optional *float*; default=1) length in seconds for the transition to last. Any frames outputted after this point will pass through the second video stream untouched.
+- **offset** (optional *float*; default=0) length in seconds to wait before beginning the transition. Any frames outputted before this point will pass through the first video stream untouched.
 - **source** (optional *string*; defaults to a basic crossfade transition) path to the gl-transition source file. This text file must be a valid gl-transition filter, exposing a `transition` function. See [here](https://github.com/gl-transitions/gl-transitions/tree/master/transitions) for a list of glsl source transitions or the [gallery](https://gl-transitions.com/gallery) for a visual list of examples.
 
 Note that ffmpeg filters separate their parameters with colons.
