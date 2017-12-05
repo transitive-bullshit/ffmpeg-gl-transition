@@ -4,6 +4,8 @@
 
 ![](https://raw.githubusercontent.com/transitive-bullshit/ffmpeg-gl-transition/master/test/crosswarp.gif)
 
+*(example crosswarp transition)*
+
 ## Intro
 
 [FFmpeg](http://ffmpeg.org/) is the defacto standard in command-line video editing, but it is really difficult to concatenate videos together using non-trivial transitions. Here are some [convoluted](https://superuser.com/questions/778762/crossfade-between-2-videos-using-ffmpeg) [examples](https://video.stackexchange.com/questions/17502/concate-two-video-file-with-fade-effect-with-ffmpeg-in-linux) of a simple cross-fade between two videos. FFmpeg filter graphs are extremely powerful, but for implementing transitions, they are just too complicated and error-prone.
