@@ -23,14 +23,15 @@ cd ffmpeg
 ln -s ~/ffmpeg-gl-transition/vf_gltransition.c libavfilter/
 git apply ~/ffmpeg-gl-transition/ffmpeg.diff
 
-./configure --enable-libx264 --enable-gpl --enable-filter=gltransition --enable-opengl --extra-libs='-lGLEW -lglfw'
+./configure --enable-libx264 --enable-gpl --enable-opengl \
+            --enable-filter=gltransition --extra-libs='-lGLEW -lglfw'
 make
 ```
 
 Notes:
-- See the official ffmpeg [compilation guide](https://trac.ffmpeg.org/wiki/CompilationGuide) for help building ffmpeg on your platform. This filter has been thoroughly tested on macOS Sierra ([macOS guide](https://trac.ffmpeg.org/wiki/CompilationGuide/macOS)).
-- There may be slight variations in how [GLEW](http://glew.sourceforge.net/) and [glfw](http://www.glfw.org/) are named (with regard to `--extra-libs`, above), e.g. `-lglew` or `-lglfw3` - check `pkg-config`.
-- The above example builds a minimal ffmpeg binary with libx264, but there's nothing codec-specific about the filter itself, so feel free to remove libx264 or add all the bells and whistles during configuration.
+- See the official ffmpeg [compilation guide](https://trac.ffmpeg.org/wiki/CompilationGuide) for help building ffmpeg on your platform. I've thoroughly tested this filter on macOS Sierra ([macOS compilation guide](https://trac.ffmpeg.org/wiki/CompilationGuide/macOS)).
+- Depending on your platform, there may be slight variations in how [GLEW](http://glew.sourceforge.net/) and [glfw](http://www.glfw.org/) are named (with regard to `--extra-libs`, above), e.g. `-lglew` or `-lglfw3` - check `pkg-config`.
+- The above example builds a minimal ffmpeg binary with libx264, but there's nothing codec-specific about the filter itself, so feel free to add or remove any of ffmpeg's bells and whistles.
 
 Here's an example of a more full-featured build configuration:
 
