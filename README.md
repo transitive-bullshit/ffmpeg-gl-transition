@@ -81,8 +81,7 @@ Note that ffmpeg filters separate their parameters with colons.
 ## Related
 
 - Excellent [example](https://github.com/nervous-systems/ffmpeg-opengl) ffmpeg filter for applying a GLSL shader to each frame of a video stream. Related blog [post](https://nervous.io/ffmpeg/opengl/2017/01/31/ffmpeg-opengl/) and follow-up [post](https://nervous.io/ffmpeg/opengl/2017/05/15/ffmpeg-pbo-yuv/).
-- [gl-transitions](https://gl-transitions.com/)
-- Original gl-transitions github [issue](https://github.com/gre/transitions.glsl.io/issues/56).
+- [gl-transitions](https://gl-transitions.com/) and original github [issue](https://github.com/gre/transitions.glsl.io/issues/56).
 - Similar [project](https://github.com/rectalogic/shad0r) that attempts to use [frei0r](https://www.dyne.org/software/frei0r/) and [MLT](https://www.mltframework.org/) instead of extending ffmpeg directly.
 - FFmpeg filter [guide](https://raw.githubusercontent.com/FFmpeg/FFmpeg/master/doc/writing_filters.txt).
 
