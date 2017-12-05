@@ -19,10 +19,11 @@ Since this library exports a new, native ffmpeg filter, you are required to buil
 ```bash
 git clone http://source.ffmpeg.org/git/ffmpeg.git ffmpeg
 cd ffmpeg
+
 ln -s ~/ffmpeg-gl-transition/vf_gltransition.c libavfilter/
 git apply ~/ffmpeg-gl-transition/ffmpeg.diff
-./configure --enable-libx264 --enable-filter=gltransition \
-  --enable-gpl --enable-opengl --extra-libs='-lGLEW -lglfw'
+
+./configure --enable-libx264 --enable-gpl --enable-filter=gltransition --enable-opengl --extra-libs='-lGLEW -lglfw'
 make
 ```
 
@@ -34,7 +35,11 @@ Notes:
 Here's an example of a more full-featured build configuration:
 
 ```bash
-./configure  --prefix=/usr/local --enable-gpl --enable-nonfree --enable-libass --enable-libfdk-aac --enable-libfreetype --enable-libmp3lame --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libx265 --enable-libopus --enable-libxvid  --enable-opengl --enable-filter=gltransition --extra-libs='-lGLEW -lglfw'
+./configure --prefix=/usr/local --enable-gpl --enable-nonfree --enable-libass \
+  --enable-libfdk-aac --enable-libfreetype --enable-libmp3lame --enable-libtheora \
+  --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libx265 \
+  --enable-libopus --enable-libxvid \
+  --enable-opengl --enable-filter=gltransition --extra-libs='-lGLEW -lglfw'
 ```
 
 You can verify that the `gltransition` filter is available via:
@@ -45,21 +50,28 @@ You can verify that the `gltransition` filter is available via:
 
 ## Usage
 
+Basic:
+```bash
+./ffmpeg -i test/0.mp4 -i test/1.mp4 -filter_complex gltransition -y test/out.mp4
+```
+
+Advanced:
 ```bash
 ./ffmpeg -i test/0.mp4 -i test/1.mp4 -filter_complex "gltransition=duration=4:offset=1.5:source=crosswarp.glsl" -y test/out.mp4
-open test/out.mp4
 ```
 
 Params:
-- **duration** (optional float, default=1) length in seconds for the transition to last. Any frames after this duration will pass through the second input.
-- **offset** (optional float, default=0) length in seconds to wait before beginning the transition. Any frames before this offset will pass through the first input.
-- **source** (optional string, default to a basic crossfade transition) path to the gl-transition source file. This text file must be a valid gl-transition filter, exposing a `transition` function. See [here](https://github.com/gl-transitions/gl-transitions/tree/master/transitions) for a list of glsl source transitions or the [gallery](https://gl-transitions.com/gallery) for a visual list of examples.
+- **duration** (optional *float*; default=1) length in seconds for the transition to last. Any frames after this duration will pass through the second input.
+- **offset** (optional *float*; default=0) length in seconds to wait before beginning the transition. Any frames before this offset will pass through the first input.
+- **source** (optional *string*; defaults to a basic crossfade transition) path to the gl-transition source file. This text file must be a valid gl-transition filter, exposing a `transition` function. See [here](https://github.com/gl-transitions/gl-transitions/tree/master/transitions) for a list of glsl source transitions or the [gallery](https://gl-transitions.com/gallery) for a visual list of examples.
+
+Note that ffmpeg filters separate their parameters with colons.
 
 ## Todo
 
 - add more examples to repo
 - **support default values for gl-transition uniforms**
-  - currently, a lot of gl-transitions appear to not function properly because their default uniform values aren't being initialized
+  - this is the reason a lot of gl-transitions currently appear to not function properly
 - support general gl-transition uniforms
 - remove restriction that both inputs be the same size
 - add gl-transition logic for aspect ratios and resize mode
@@ -67,7 +79,7 @@ Params:
 
 ## Related
 
-- Excellent [example](https://github.com/nervous-systems/ffmpeg-opengl) ffmpeg filter for applying a GLSL shader to each frame of a video stream. (Related blog [post](https://nervous.io/ffmpeg/opengl/2017/01/31/ffmpeg-opengl/) and follow-up [post](https://nervous.io/ffmpeg/opengl/2017/05/15/ffmpeg-pbo-yuv/)).
+- Excellent [example](https://github.com/nervous-systems/ffmpeg-opengl) ffmpeg filter for applying a GLSL shader to each frame of a video stream. Related blog [post](https://nervous.io/ffmpeg/opengl/2017/01/31/ffmpeg-opengl/) and follow-up [post](https://nervous.io/ffmpeg/opengl/2017/05/15/ffmpeg-pbo-yuv/).
 - [gl-transitions](https://gl-transitions.com/)
 - Original gl-transitions github [issue](https://github.com/gre/transitions.glsl.io/issues/56).
 - Similar [project](https://github.com/rectalogic/shad0r) that attempts to use [frei0r](https://www.dyne.org/software/frei0r/) and [MLT](https://www.mltframework.org/) instead of extending ffmpeg directly.
