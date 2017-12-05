@@ -14,7 +14,7 @@ On the other hand, [GL Transitions](https://gl-transitions.com/) is a great open
 
 ## Building
 
-Since this library exports a new, native ffmpeg filter, you are required to build ffmpeg from source.
+Since this library exports a native ffmpeg filter, you are required to build ffmpeg from source. Don't worry, though -- it's surprisingly straightforward.
 
 ```bash
 git clone http://source.ffmpeg.org/git/ffmpeg.git ffmpeg
