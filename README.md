@@ -2,7 +2,7 @@
 
 > FFmpeg filter for applying GLSL transitions between video streams ([gl-transitions](https://gl-transitions.com/)).
 
-![](https://raw.githubusercontent.com/transitive-bullshit/ffmpeg-gl-transition/master/test/crosswarp.gif)
+![](https://raw.githubusercontent.com/transitive-bullshit/ffmpeg-gl-transition/master/media/crosswarp.gif)
 
 *(example [crosswarp](https://gl-transitions.com/editor/crosswarp) transition)*
 
@@ -55,12 +55,12 @@ You can verify that the `gltransition` filter is available via:
 
 Basic:
 ```bash
-./ffmpeg -i test/0.mp4 -i test/1.mp4 -filter_complex gltransition -y test/out.mp4
+./ffmpeg -i media/0.mp4 -i media/1.mp4 -filter_complex gltransition -y out.mp4
 ```
 
 Advanced:
 ```bash
-./ffmpeg -i test/0.mp4 -i test/1.mp4 -filter_complex "gltransition=duration=4:offset=1.5:source=crosswarp.glsl" -y test/out.mp4
+./ffmpeg -i media/0.mp4 -i media/1.mp4 -filter_complex "gltransition=duration=4:offset=1.5:source=crosswarp.glsl" -y out.mp4
 ```
 
 Params:
@@ -69,6 +69,8 @@ Params:
 - **source** (optional *string*; defaults to a basic crossfade transition) path to the gl-transition source file. This text file must be a valid gl-transition filter, exposing a `transition` function. See [here](https://github.com/gl-transitions/gl-transitions/tree/master/transitions) for a list of glsl source transitions or the [gallery](https://gl-transitions.com/gallery) for a visual list of examples.
 
 Note that ffmpeg filters separate their parameters with colons.
+
+See `concat.sh` for a more complex example of concatenating three mp4s together with unique transitions between them.
 
 ## Todo
 

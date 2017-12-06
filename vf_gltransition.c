@@ -79,6 +79,9 @@ typedef struct {
   double offset;
   char *source;
 
+  // timestamp of the first frame in the output, in the timebase units
+  int64_t first_pts;
+
   // uniforms
   GLuint        from;
   GLuint        to;
@@ -305,8 +308,9 @@ static AVFrame *apply_transition(FFFrameSync *fs,
 
   av_frame_copy_props(outFrame, fromFrame);
 
-  const float ts = (fs->pts == AV_NOPTS_VALUE ? 0.0f : fs->pts / (float)fs->time_base.den) - c->offset;
+  const float ts = ((fs->pts - c->first_pts) / (float)fs->time_base.den) - c->offset;
   const float progress = FFMAX(0.0f, FFMIN(1.0f, ts / c->duration));
+  // av_log(ctx, AV_LOG_ERROR, "transition %llu %f %f\n", fs->pts - c->first_pts, ts, progress);
   glUniform1f(c->progress, progress);
 
   glActiveTexture(GL_TEXTURE0);
@@ -328,6 +332,7 @@ static AVFrame *apply_transition(FFFrameSync *fs,
 static int blend_frame(FFFrameSync *fs)
 {
   AVFilterContext *ctx = fs->parent;
+  GLTransitionContext *c = ctx->priv;
 
   AVFrame *fromFrame, *toFrame, *outFrame;
   int ret;
@@ -335,6 +340,10 @@ static int blend_frame(FFFrameSync *fs)
   ret = ff_framesync_dualinput_get(fs, &fromFrame, &toFrame);
   if (ret < 0) {
     return ret;
+  }
+
+  if (c->first_pts == AV_NOPTS_VALUE && fromFrame && fromFrame->pts != AV_NOPTS_VALUE) {
+    c->first_pts = fromFrame->pts;
   }
 
   if (!toFrame) {
@@ -353,6 +362,7 @@ static av_cold int init(AVFilterContext *ctx)
 {
   GLTransitionContext *c = ctx->priv;
   c->fs.on_event = blend_frame;
+  c->first_pts = AV_NOPTS_VALUE;
 
   if (!glfwInit()) {
     return -1;
