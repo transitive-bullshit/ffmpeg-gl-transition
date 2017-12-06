@@ -257,7 +257,7 @@ static int setup_gl(AVFilterLink *inLink)
   AVFilterContext *ctx = inLink->dst;
   GLTransitionContext *c = ctx->priv;
 
-  glfwWindowHint(GLFW_VISIBLE, 1);
+  glfwWindowHint(GLFW_VISIBLE, 0);
   c->window = glfwCreateWindow(inLink->w, inLink->h, "", NULL, NULL);
 
   if (!c->window) {

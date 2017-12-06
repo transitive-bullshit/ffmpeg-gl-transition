@@ -72,11 +72,11 @@ Note that ffmpeg filters separate their parameters with colons.
 
 ## Todo
 
+- add more complicated filter graph examples to readme using concat and multiple, unique transitions
 - **support default values for gl-transition uniforms**
   - this is the reason a lot of gl-transitions currently appear to not function properly
-- support general gl-transition uniforms
-- add more complicated filter graph examples to readme using concat and multiple, unique transitions
 - remove restriction that both inputs be the same size
+- support general gl-transition uniforms
 - add gl-transition logic for aspect ratios and resize mode
 - transpile webgl glsl to opengl glsl via angle
 
