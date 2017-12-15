@@ -68,13 +68,13 @@ Params:
 - **offset** (optional *float*; default=0) length in seconds to wait before beginning the transition. Any frames outputted before this point will pass through the first video stream untouched.
 - **source** (optional *string*; defaults to a basic crossfade transition) path to the gl-transition source file. This text file must be a valid gl-transition filter, exposing a `transition` function. See [here](https://github.com/gl-transitions/gl-transitions/tree/master/transitions) for a list of glsl source transitions or the [gallery](https://gl-transitions.com/gallery) for a visual list of examples.
 
-Note that ffmpeg filters separate their parameters with colons.
+Note that both `duration` and `offset` are relative to the start of this filter invocation, not global time values.
 
 See `concat.sh` for a more complex example of concatenating three mp4s together with unique transitions between them.
 
 ## Todo
 
-- add more complicated filter graph examples to readme using concat and multiple, unique transitions
+- simplify filter graph required to achieve multi-file concat in concat.sh
 - **support default values for gl-transition uniforms**
   - this is the reason a lot of gl-transitions currently appear to not function properly
 - remove restriction that both inputs be the same size
