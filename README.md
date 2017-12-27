@@ -53,12 +53,12 @@ You can verify that the `gltransition` filter is available via:
 
 ## Usage
 
-Basic:
+Default Options:
 ```bash
 ./ffmpeg -i media/0.mp4 -i media/1.mp4 -filter_complex gltransition -y out.mp4
 ```
 
-Advanced:
+Custom Options:
 ```bash
 ./ffmpeg -i media/0.mp4 -i media/1.mp4 -filter_complex "gltransition=duration=4:offset=1.5:source=crosswarp.glsl" -y out.mp4
 ```
@@ -70,7 +70,13 @@ Params:
 
 Note that both `duration` and `offset` are relative to the start of this filter invocation, not global time values.
 
-See `concat.sh` for a more complex example of concatenating three mp4s together with unique transitions between them.
+## Examples
+
+See [concat.sh](https://github.com/transitive-bullshit/ffmpeg-gl-transition/blob/master/concat.sh) for a more complex example of concatenating three mp4s together with unique transitions between them.
+
+For any non-trivial concatenation, you'll likely want to make a filter chain comprised of [split](https://ffmpeg.org/ffmpeg-filters.html#split_002c-asplit), [trim](https://ffmpeg.org/ffmpeg-filters.html#trim) + [setpts](https://ffmpeg.org/ffmpeg-filters.html#setpts_002c-asetpts), and [concat](https://ffmpeg.org/ffmpeg-filters.html#concat) (with the `v` for video option) filters in addition to the [gltransition](https://github.com/transitive-bullshit/ffmpeg-gl-transition) filter itself. If you want to concat audio streams in the same pass, you'll need to additionally make use of the [asplit]([split](https://ffmpeg.org/ffmpeg-filters.html#split_002c-asplit)), [atrim](https://ffmpeg.org/ffmpeg-filters.html#atrim) + [asetpts](https://ffmpeg.org/ffmpeg-filters.html#setpts_002c-asetpts), and [concat](https://ffmpeg.org/ffmpeg-filters.html#concat) (with the `a` for audio option) filters.
+
+There is no limit to the number of video streams you can concat together in one filter graph, but beyond a couple of streams, you'll likely want to write a wrapper script as the required stream preprocessing gets unwieldly very fast.  See [here](https://github.com/transitive-bullshit/ffmpeg-gl-transition/issues/4#issue-284723457) for a more complex example including audio stream concatenation. Also see [here](https://github.com/transitive-bullshit/ffmpeg-gl-transition/issues/2#issuecomment-352163624) for a more understandable example of concatenating two, 5-second videos together with a 1s fade inbetween.
 
 ## Todo
 
