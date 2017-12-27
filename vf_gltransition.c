@@ -309,9 +309,12 @@ static AVFrame *apply_transition(FFFrameSync *fs,
 
   av_frame_copy_props(outFrame, fromFrame);
 
+  glfwMakeContextCurrent(c->window);
+  glUseProgram(c->program);
+
   const float ts = ((fs->pts - c->first_pts) / (float)fs->time_base.den) - c->offset;
   const float progress = FFMAX(0.0f, FFMIN(1.0f, ts / c->duration));
-  // av_log(ctx, AV_LOG_ERROR, "transition %llu %f %f\n", fs->pts - c->first_pts, ts, progress);
+  // av_log(ctx, AV_LOG_ERROR, "transition '%s' %llu %f %f\n", c->source, fs->pts - c->first_pts, ts, progress);
   glUniform1f(c->progress, progress);
 
   glActiveTexture(GL_TEXTURE0);
