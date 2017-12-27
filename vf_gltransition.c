@@ -35,7 +35,8 @@ static const GLchar *v_shader_source =
   "varying vec2 _uv;\n"
   "void main(void) {\n"
   "  gl_Position = vec4(position, 0, 1);\n"
-  "  _uv = position * 0.5 + 0.5;\n"
+  "  vec2 uv = position * 0.5 + 0.5;\n"
+  "  _uv = vec2(uv.x, 1.0 - uv.y);\n"
   "}\n";
 
 static const GLchar *f_shader_template =
@@ -48,11 +49,11 @@ static const GLchar *f_shader_template =
   "uniform float _toR;\n"
   "\n"
   "vec4 getFromColor(vec2 uv) {\n"
-  "  return texture2D(from, uv);\n"
+  "  return texture2D(from, vec2(uv.x, 1.0 - uv.y));\n"
   "}\n"
   "\n"
   "vec4 getToColor(vec2 uv) {\n"
-  "  return texture2D(to, uv);\n"
+  "  return texture2D(to, vec2(uv.x, 1.0 - uv.y));\n"
   "}\n"
   "\n"
   "\n%s\n"
