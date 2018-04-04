@@ -6,6 +6,10 @@
 
 *(example [crosswarp](https://gl-transitions.com/editor/crosswarp) transition)*
 
+## Note
+
+If you want an easier solution, I recommend checking out [ffmpeg-concat](https://github.com/transitive-bullshit/ffmpeg-concat), an npm module and CLI that allows you to concat a list of videos together using a standard build of ffmpeg along with the same sexy OpenGL transitions.
+
 ## Intro
 
 [FFmpeg](http://ffmpeg.org/) is the defacto standard in command-line video editing, but it is really difficult to concatenate videos together using non-trivial transitions. Here are some [convoluted](https://superuser.com/questions/778762/crossfade-between-2-videos-using-ffmpeg) [examples](https://video.stackexchange.com/questions/17502/concate-two-video-file-with-fade-effect-with-ffmpeg-in-linux) of a simple cross-fade between two videos. FFmpeg filter graphs are extremely powerful, but for implementing transitions, they are just too complicated and error-prone.
@@ -90,6 +94,7 @@ There is no limit to the number of video streams you can concat together in one 
 
 ## Related
 
+- [ffmpeg-concat](https://github.com/transitive-bullshit/ffmpeg-concat) - Concats a list of videos together using ffmpeg with sexy OpenGL transitions. This module and CLI are easier to use than the lower-level custom filter provided by this library.
 - Excellent [example](https://github.com/nervous-systems/ffmpeg-opengl) ffmpeg filter for applying a GLSL shader to each frame of a video stream. Related blog [post](https://nervous.io/ffmpeg/opengl/2017/01/31/ffmpeg-opengl/) and follow-up [post](https://nervous.io/ffmpeg/opengl/2017/05/15/ffmpeg-pbo-yuv/).
 - [gl-transitions](https://gl-transitions.com/) and original github [issue](https://github.com/gre/transitions.glsl.io/issues/56).
 - Similar [project](https://github.com/rectalogic/shad0r) that attempts to use [frei0r](https://www.dyne.org/software/frei0r/) and [MLT](https://www.mltframework.org/) instead of extending ffmpeg directly.
