@@ -1,8 +1,8 @@
 diff --git a/libavfilter/Makefile b/libavfilter/Makefile
-index 0b77d7a01f..bc147d44cf 100644
+index a90ca30ad7..c0fc73be46 100644
 --- a/libavfilter/Makefile
 +++ b/libavfilter/Makefile
-@@ -352,6 +352,7 @@ OBJS-$(CONFIG_YADIF_FILTER)                  += vf_yadif.o
+@@ -367,6 +367,7 @@ OBJS-$(CONFIG_YADIF_FILTER)                  += vf_yadif.o
  OBJS-$(CONFIG_ZMQ_FILTER)                    += f_zmq.o
  OBJS-$(CONFIG_ZOOMPAN_FILTER)                += vf_zoompan.o
  OBJS-$(CONFIG_ZSCALE_FILTER)                 += vf_zscale.o
@@ -11,14 +11,14 @@ index 0b77d7a01f..bc147d44cf 100644
  OBJS-$(CONFIG_ALLRGB_FILTER)                 += vsrc_testsrc.o
  OBJS-$(CONFIG_ALLYUV_FILTER)                 += vsrc_testsrc.o
 diff --git a/libavfilter/allfilters.c b/libavfilter/allfilters.c
-index 4c834f7381..52dd77e405 100644
+index 6eac828616..0570c1c2aa 100644
 --- a/libavfilter/allfilters.c
 +++ b/libavfilter/allfilters.c
-@@ -360,6 +360,7 @@ static void register_all(void)
-     REGISTER_FILTER(ZMQ,            zmq,            vf);
-     REGISTER_FILTER(ZOOMPAN,        zoompan,        vf);
-     REGISTER_FILTER(ZSCALE,         zscale,         vf);
-+    REGISTER_FILTER(GLTRANSITION,   gltransition,   vf);
+@@ -357,6 +357,7 @@ extern AVFilter ff_vf_yadif;
+ extern AVFilter ff_vf_zmq;
+ extern AVFilter ff_vf_zoompan;
+ extern AVFilter ff_vf_zscale;
++extern AVFilter ff_vf_gltransition;
  
-     REGISTER_FILTER(ALLRGB,         allrgb,         vsrc);
-     REGISTER_FILTER(ALLYUV,         allyuv,         vsrc);
+ extern AVFilter ff_vsrc_allrgb;
+ extern AVFilter ff_vsrc_allyuv;
