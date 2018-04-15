@@ -99,6 +99,7 @@ There is no limit to the number of video streams you can concat together in one 
 - [gl-transitions](https://gl-transitions.com/) and original github [issue](https://github.com/gre/transitions.glsl.io/issues/56).
 - Similar [project](https://github.com/rectalogic/shad0r) that attempts to use [frei0r](https://www.dyne.org/software/frei0r/) and [MLT](https://www.mltframework.org/) instead of extending ffmpeg directly.
 - FFmpeg filter [guide](https://raw.githubusercontent.com/FFmpeg/FFmpeg/master/doc/writing_filters.txt).
+- [awesome-ffmpeg](https://github.com/transitive-bullshit/awesome-ffmpeg) - A curated list of awesome ffmpeg resources with a focus on JavaScript.
 
 ## License
 
