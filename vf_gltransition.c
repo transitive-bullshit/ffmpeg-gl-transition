@@ -12,11 +12,12 @@
 # define __gl_h_
 # define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
 #include <OpenGL/gl3.h>
+#include <GLFW/glfw3.h>
 #else
+#include <EGL/egl.h>
 #include <GL/glew.h>
 #endif
 
-#include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
@@ -26,6 +27,16 @@
 
 #define PIXEL_FORMAT (GL_RGB)
 
+#ifndef __APPLE__
+static const EGLint configAttribs[] = {
+    EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
+    EGL_BLUE_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_RED_SIZE, 8,
+    EGL_DEPTH_SIZE, 8,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+    EGL_NONE};
+#endif
 static const float position[12] = {
   -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f
 };
@@ -92,9 +103,16 @@ typedef struct {
   GLint         _toR;
 
   // internal state
-  GLFWwindow    *window;
   GLuint        posBuf;
   GLuint        program;
+  #ifdef __APPLE__
+  GLFWwindow    *window;
+  #else
+  EGLDisplay eglDpy;
+  EGLConfig eglCfg;
+  EGLSurface eglSurf;
+  EGLContext eglCtx;
+  #endif
 
   GLchar *f_shader_source;
 } GLTransitionContext;
@@ -261,15 +279,44 @@ static int setup_gl(AVFilterLink *inLink)
   AVFilterContext *ctx = inLink->dst;
   GLTransitionContext *c = ctx->priv;
 
+
+#ifdef __APPLE__
+  //glfw
+
   glfwWindowHint(GLFW_VISIBLE, 0);
   c->window = glfwCreateWindow(inLink->w, inLink->h, "", NULL, NULL);
-
   if (!c->window) {
     av_log(ctx, AV_LOG_ERROR, "setup_gl ERROR");
     return -1;
   }
-
   glfwMakeContextCurrent(c->window);
+#else
+  //init EGL
+  // 1. Initialize EGL
+  c->eglDpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+  EGLint major, minor;
+  eglInitialize(c->eglDpy, &major, &minor);
+  av_log(ctx, AV_LOG_DEBUG, "%d%d", major, minor);
+  // 2. Select an appropriate configuration
+  EGLint numConfigs;
+  EGLint pbufferAttribs[] = {
+      EGL_WIDTH,
+      inLink->w,
+      EGL_HEIGHT,
+      inLink->h,
+      EGL_NONE,
+  };
+  eglChooseConfig(c->eglDpy, configAttribs, &c->eglCfg, 1, &numConfigs);
+  // 3. Create a surface
+  c->eglSurf = eglCreatePbufferSurface(c->eglDpy, c->eglCfg,
+                                       pbufferAttribs);
+  // 4. Bind the API
+  eglBindAPI(EGL_OPENGL_API);
+  // 5. Create a context and make it current
+  c->eglCtx = eglCreateContext(c->eglDpy, c->eglCfg, EGL_NO_CONTEXT, NULL);
+  eglMakeCurrent(c->eglDpy, c->eglSurf, c->eglSurf, c->eglCtx);
+
+#endif
 
   #ifndef __APPLE__
   glewExperimental = GL_TRUE;
@@ -292,7 +339,7 @@ static int setup_gl(AVFilterLink *inLink)
 }
 
 static AVFrame *apply_transition(FFFrameSync *fs,
-                                 AVFilterContext *ctx, 
+                                 AVFilterContext *ctx,
                                  AVFrame *fromFrame,
                                  const AVFrame *toFrame)
 {
@@ -309,7 +356,12 @@ static AVFrame *apply_transition(FFFrameSync *fs,
 
   av_frame_copy_props(outFrame, fromFrame);
 
+#ifdef __APPLE__
   glfwMakeContextCurrent(c->window);
+#else
+  eglMakeCurrent(c->eglDpy, c->eglSurf, c->eglSurf, c->eglCtx);
+#endif
+
   glUseProgram(c->program);
 
   const float ts = ((fs->pts - c->first_pts) / (float)fs->time_base.den) - c->offset;
@@ -362,24 +414,28 @@ static int blend_frame(FFFrameSync *fs)
   return ff_filter_frame(ctx->outputs[0], outFrame);
 }
 
-static av_cold int init(AVFilterContext *ctx) 
+static av_cold int init(AVFilterContext *ctx)
 {
   GLTransitionContext *c = ctx->priv;
   c->fs.on_event = blend_frame;
   c->first_pts = AV_NOPTS_VALUE;
 
-  if (!glfwInit()) {
+
+#ifdef __APPLE__
+  if (!glfwInit())
+  {
     return -1;
   }
+#endif
 
   return 0;
 }
 
-static av_cold void uninit(AVFilterContext *ctx)
-{
+static av_cold void uninit(AVFilterContext *ctx) {
   GLTransitionContext *c = ctx->priv;
   ff_framesync_uninit(&c->fs);
 
+#ifdef __APPLE__
   if (c->window) {
     glDeleteTextures(1, &c->from);
     glDeleteTextures(1, &c->to);
@@ -387,6 +443,15 @@ static av_cold void uninit(AVFilterContext *ctx)
     glDeleteProgram(c->program);
     glfwDestroyWindow(c->window);
   }
+#else
+  if (c->eglDpy) {
+    glDeleteTextures(1, &c->from);
+    glDeleteTextures(1, &c->to);
+    glDeleteBuffers(1, &c->posBuf);
+    glDeleteProgram(c->program);
+    eglTerminate(c->eglDpy);
+  }
+#endif
 
   if (c->f_shader_source) {
     av_freep(&c->f_shader_source);
@@ -396,7 +461,7 @@ static av_cold void uninit(AVFilterContext *ctx)
 static int query_formats(AVFilterContext *ctx)
 {
   static const enum AVPixelFormat formats[] = {
-    AV_PIX_FMT_RGB24, 
+    AV_PIX_FMT_RGB24,
     AV_PIX_FMT_NONE
   };
 
@@ -458,10 +523,10 @@ static const AVFilterPad gltransition_inputs[] = {
 
 static const AVFilterPad gltransition_outputs[] = {
   {
-    .name = "default", 
+    .name = "default",
     .type = AVMEDIA_TYPE_VIDEO,
     .config_props = config_output,
-  }, 
+  },
   {NULL}
 };
 
