@@ -23,55 +23,66 @@ If you want an easier solution, I recommend checking out [ffmpeg-concat](https:/
 
 Since this library exports a native ffmpeg filter, you are required to build ffmpeg from source. Don't worry, though -- it's surprisingly straightforward.
 
-### 1. Dependence
-#### Linux + Nvidia + EGL:  
-we use EGL other than GLX on Linux to make it easier to run on headless server, for things like Xvfb are no more required. It is tested on centos7 with Nvidia Gpus. Please open an issue if you have problems of using EGL with other linux distribution and Nvidia GPUs.       
+### Dependencies
 
-**glvnd1.0**  
-[building from source](https://github.com/NVIDIA/libglvnd)  
-  
-**mesaGL>=1.7 mesaGLU>=1.7**  
-on Redhat and derivatives(Debian's is something similar)  
-```base
-yum install mesa-libGLU mesa-libGLU-devel 
+First, you need to install a few dependencies. Mac OS is very straightforward. On Linux and Windows, there are two options, either using EGL or not using EGL. The main advantage of using EGL is that it is easier to run in headless environments.
+
+#### Mac OS
+
+**GLEW + glfw3**
+
 ```
-  
-**GLEW >=2.0**  
+brew install glew glfw
+```
+
+Mac OS users should follow instructions for **not** using EGL.
+
+#### Linux with EGL
+
+We default to EGL rather than GLX on Linux to make it easier to run headless, so xvfb is no longer needed.
+
+**glvnd1.0**
+[building from source](https://github.com/NVIDIA/libglvnd)
+
+**mesaGL>=1.7 mesaGLU>=1.7**
+
+```base
+yum install mesa-libGLU mesa-libGLU-devel
+```
+
+**GLEW >=2.0**
 [building from source](http://glew.sourceforge.net/)
 
-#### Mac OS:  
-**GLEW + glfw3**  
-using homebrew
-```
-brew install glew glfw 
-```
+#### Linux without EGL
 
-#### Windows or AMD GPU or CPU rendering
-haven't work on these environments. I think it's possible to use EGL, if not just follow the instruction below to use glfw;
-
-#### Without EGL
-if you don't want to use EGL, just comment this line in `vf_gltransition.c`
+If you don't want to use EGL, just comment out this line in `vf_gltransition.c`
 
 ```c
 #ifndef __APPLE__
-# define GL_TRANSITION_USING_EGL //remove this line if you don't want to use EGL
+# define GL_TRANSITION_USING_EGL // remove this line if you don't want to use EGL
 #endif
 ```
-  
 
+**GLEW**
 
-**GLEW**  
-on Redhat and derivatives(Debian's is something similar)    
 ```bash
 yum install glew glew-devel
 ```
-**glfw**  
+
+**glfw**
 [building from source](http://www.glfw.org/)
 
+On headless environments without EGL, you'll also need to install `xvfb`.
 
+```bash
+pkg install xorg-vfbserver (FreeBSD)
+apt install xvfb (Ubuntu)
 
-### 2. Building ffmpeg
+Xvfb :1 -screen 0 1280x1024x16
+export DISPLAY=:99
+```
 
+### Building ffmpeg
 
 ```bash
 git clone http://source.ffmpeg.org/git/ffmpeg.git ffmpeg
@@ -81,12 +92,14 @@ ln -s ~/ffmpeg-gl-transition/vf_gltransition.c libavfilter/
 git apply ~/ffmpeg-gl-transition/ffmpeg.diff
 
 ```
-non EGL:
+
+Non-EGL:
 ```base
 ./configure --enable-libx264 --enable-gpl --enable-opengl \
             --enable-filter=gltransition --extra-libs='-lGLEW -lglfw'
 make
 ```
+
 EGL:
 ```base
 ./configure ... --extra-libs='-lGLEW -lEGL'
