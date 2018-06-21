@@ -8,14 +8,22 @@
 #include "internal.h"
 #include "framesync.h"
 
+#ifndef __APPLE__
+# define GL_TRANSITION_USING_EGL //remove this line if you don't want to use EGL
+#endif
+
 #ifdef __APPLE__
 # define __gl_h_
 # define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
-#include <OpenGL/gl3.h>
-#include <GLFW/glfw3.h>
+# include <OpenGL/gl3.h>
 #else
-#include <EGL/egl.h>
-#include <GL/glew.h>
+# include <GL/glew.h>
+#endif
+
+#ifdef GL_TRANSITION_USING_EGL
+# include <EGL/egl.h>
+#else
+# include <GLFW/glfw3.h>
 #endif
 
 #include <stdio.h>
@@ -27,7 +35,7 @@
 
 #define PIXEL_FORMAT (GL_RGB)
 
-#ifndef __APPLE__
+#ifdef GL_TRANSITION_USING_EGL
 static const EGLint configAttribs[] = {
     EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
     EGL_BLUE_SIZE, 8,
@@ -105,14 +113,14 @@ typedef struct {
   // internal state
   GLuint        posBuf;
   GLuint        program;
-  #ifdef __APPLE__
-  GLFWwindow    *window;
-  #else
+#ifdef GL_TRANSITION_USING_EGL
   EGLDisplay eglDpy;
   EGLConfig eglCfg;
   EGLSurface eglSurf;
   EGLContext eglCtx;
-  #endif
+#else
+  GLFWwindow    *window;
+#endif
 
   GLchar *f_shader_source;
 } GLTransitionContext;
@@ -280,17 +288,7 @@ static int setup_gl(AVFilterLink *inLink)
   GLTransitionContext *c = ctx->priv;
 
 
-#ifdef __APPLE__
-  //glfw
-
-  glfwWindowHint(GLFW_VISIBLE, 0);
-  c->window = glfwCreateWindow(inLink->w, inLink->h, "", NULL, NULL);
-  if (!c->window) {
-    av_log(ctx, AV_LOG_ERROR, "setup_gl ERROR");
-    return -1;
-  }
-  glfwMakeContextCurrent(c->window);
-#else
+#ifdef GL_TRANSITION_USING_EGL
   //init EGL
   // 1. Initialize EGL
   c->eglDpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -315,13 +313,23 @@ static int setup_gl(AVFilterLink *inLink)
   // 5. Create a context and make it current
   c->eglCtx = eglCreateContext(c->eglDpy, c->eglCfg, EGL_NO_CONTEXT, NULL);
   eglMakeCurrent(c->eglDpy, c->eglSurf, c->eglSurf, c->eglCtx);
+#else
+  //glfw
+
+  glfwWindowHint(GLFW_VISIBLE, 0);
+  c->window = glfwCreateWindow(inLink->w, inLink->h, "", NULL, NULL);
+  if (!c->window) {
+    av_log(ctx, AV_LOG_ERROR, "setup_gl ERROR");
+    return -1;
+  }
+  glfwMakeContextCurrent(c->window);
 
 #endif
 
-  #ifndef __APPLE__
+#ifndef __APPLE__
   glewExperimental = GL_TRUE;
   glewInit();
-  #endif
+#endif
 
   glViewport(0, 0, inLink->w, inLink->h);
 
@@ -356,10 +364,10 @@ static AVFrame *apply_transition(FFFrameSync *fs,
 
   av_frame_copy_props(outFrame, fromFrame);
 
-#ifdef __APPLE__
-  glfwMakeContextCurrent(c->window);
-#else
+#ifdef GL_TRANSITION_USING_EGL
   eglMakeCurrent(c->eglDpy, c->eglSurf, c->eglSurf, c->eglCtx);
+#else
+  glfwMakeContextCurrent(c->window);
 #endif
 
   glUseProgram(c->program);
@@ -421,7 +429,7 @@ static av_cold int init(AVFilterContext *ctx)
   c->first_pts = AV_NOPTS_VALUE;
 
 
-#ifdef __APPLE__
+#ifndef GL_TRANSITION_USING_EGL
   if (!glfwInit())
   {
     return -1;
@@ -435,21 +443,21 @@ static av_cold void uninit(AVFilterContext *ctx) {
   GLTransitionContext *c = ctx->priv;
   ff_framesync_uninit(&c->fs);
 
-#ifdef __APPLE__
-  if (c->window) {
-    glDeleteTextures(1, &c->from);
-    glDeleteTextures(1, &c->to);
-    glDeleteBuffers(1, &c->posBuf);
-    glDeleteProgram(c->program);
-    glfwDestroyWindow(c->window);
-  }
-#else
+#ifdef GL_TRANSITION_USING_EGL
   if (c->eglDpy) {
     glDeleteTextures(1, &c->from);
     glDeleteTextures(1, &c->to);
     glDeleteBuffers(1, &c->posBuf);
     glDeleteProgram(c->program);
     eglTerminate(c->eglDpy);
+  }
+#else
+  if (c->window) {
+    glDeleteTextures(1, &c->from);
+    glDeleteTextures(1, &c->to);
+    glDeleteBuffers(1, &c->posBuf);
+    glDeleteProgram(c->program);
+    glfwDestroyWindow(c->window);
   }
 #endif
 

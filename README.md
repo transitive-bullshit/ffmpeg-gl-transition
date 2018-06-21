@@ -18,9 +18,60 @@ If you want an easier solution, I recommend checking out [ffmpeg-concat](https:/
 
 **This library is an ffmpeg extension that makes it easy to use gl-transitions in ffmpeg filter graphs.**
 
+
 ## Building
 
 Since this library exports a native ffmpeg filter, you are required to build ffmpeg from source. Don't worry, though -- it's surprisingly straightforward.
+
+### 1. Dependence
+#### Linux + Nvidia + EGL:  
+we use EGL other than GLX on Linux to make it easier to run on headless server, for things like Xvfb are no more required. It is tested on centos7 with Nvidia Gpus. Please open an issue if you have problems of using EGL with other linux distribution and Nvidia GPUs.       
+
+**glvnd1.0**  
+[building from source](https://github.com/NVIDIA/libglvnd)  
+  
+**mesaGL>=1.7 mesaGLU>=1.7**  
+on Redhat and derivatives(Debian's is something similar)  
+```base
+yum install mesa-libGLU mesa-libGLU-devel 
+```
+  
+**GLEW >=2.0**  
+[building from source](http://glew.sourceforge.net/)
+
+#### Mac OS:  
+**GLEW + glfw3**  
+using homebrew
+```
+brew install glew glfw 
+```
+
+#### Windows or AMD GPU or CPU rendering
+haven't work on these environments. I think it's possible to use EGL, if not just follow the instruction below to use glfw;
+
+#### Without EGL
+if you don't want to use EGL, just comment this line in `vf_gltransition.c`
+
+```c
+#ifndef __APPLE__
+# define GL_TRANSITION_USING_EGL //remove this line if you don't want to use EGL
+#endif
+```
+  
+
+
+**GLEW**  
+on Redhat and derivatives(Debian's is something similar)    
+```bash
+yum install glew glew-devel
+```
+**glfw**  
+[building from source](http://www.glfw.org/)
+
+
+
+### 2. Building ffmpeg
+
 
 ```bash
 git clone http://source.ffmpeg.org/git/ffmpeg.git ffmpeg
@@ -29,8 +80,16 @@ cd ffmpeg
 ln -s ~/ffmpeg-gl-transition/vf_gltransition.c libavfilter/
 git apply ~/ffmpeg-gl-transition/ffmpeg.diff
 
+```
+non EGL:
+```base
 ./configure --enable-libx264 --enable-gpl --enable-opengl \
             --enable-filter=gltransition --extra-libs='-lGLEW -lglfw'
+make
+```
+EGL:
+```base
+./configure ... --extra-libs='-lGLEW -lEGL'
 make
 ```
 
