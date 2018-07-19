@@ -130,7 +130,7 @@ Uniform Variables Setting:
 - supported date types right now: `int`, `float`
 - use `1.0` instead of `1` if the uniform variable is defined as float in glsl script;
 ```bash
-./ffmpeg -i media/0.mp4 -i media/1.mp4 -filter_complex "gltransition=duration=4:offset=1.5:source=WaterGrop.glsl:uniforms='amplitude=10.0&speed=15.5'" -y out.mp4
+./ffmpeg -i media/0.mp4 -i media/1.mp4 -filter_complex "gltransition=duration=4:offset=1.5:source=WaterDrop.glsl:uniforms='amplitude=10.0&speed=15.5'" -y out.mp4
 ```
 
 Params:
