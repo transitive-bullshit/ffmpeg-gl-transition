@@ -126,6 +126,13 @@ Custom Options:
 ./ffmpeg -i media/0.mp4 -i media/1.mp4 -filter_complex "gltransition=duration=4:offset=1.5:source=crosswarp.glsl" -y out.mp4
 ```
 
+Uniform Variables Setting:
+- supported date types right now: `int`, `float`
+- use `1.0` instead of `1` if the uniform variable is defined as float in glsl script;
+```bash
+./ffmpeg -i media/0.mp4 -i media/1.mp4 -filter_complex "gltransition=duration=4:offset=1.5:source=WaterGrop.glsl:uniforms='amplitude=10.0&speed=15.5'" -y out.mp4
+```
+
 Params:
 - **duration** (optional *float*; default=1) length in seconds for the transition to last. Any frames outputted after this point will pass through the second video stream untouched.
 - **offset** (optional *float*; default=0) length in seconds to wait before beginning the transition. Any frames outputted before this point will pass through the first video stream untouched.
@@ -147,9 +154,11 @@ There is no limit to the number of video streams you can concat together in one 
 - **support default values for gl-transition uniforms**
   - this is the reason a lot of gl-transitions currently appear to not function properly
 - remove restriction that both inputs be the same size
-- support general gl-transition uniforms
 - add gl-transition logic for aspect ratios and resize mode
 - transpile webgl glsl to opengl glsl via angle
+- support more data types of general uniform   
+  - vectors
+  - matrices
 
 ## Related
 
