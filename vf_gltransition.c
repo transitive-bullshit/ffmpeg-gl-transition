@@ -349,7 +349,7 @@ static void setup_uniforms(AVFilterLink *fromLink)
   if(sa.len >0){
     for(int i = 0;i<sa.len;i+=2){
       GLint location = glGetUniformLocation(c->program, sa.strings[i]);
-      if(location>0){
+      if (location >= 0) {
         int iv;
         float fv;
         if (strToInt(sa.strings[i + 1], &iv)) {
