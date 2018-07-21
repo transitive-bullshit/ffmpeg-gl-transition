@@ -427,7 +427,7 @@ static void setup_uniforms(AVFilterLink *fromLink)
           } else if (strToFloat(sa.strings[i + 1], &floatVar)) {
             glUniform1f(location, floatVar);
           } else {
-            av_log(ctx, AV_LOG_ERROR, "value %s not supported,(use int or float)", sa.strings[i + 1]);
+            av_log(ctx, AV_LOG_ERROR, "value %s not supported, supported: int float ivec vec)", sa.strings[i + 1]);
           }
         } else {
           av_log(ctx, AV_LOG_ERROR, "can't get location of uniform: %s,fail set value: %s\n", sa.strings[i],
