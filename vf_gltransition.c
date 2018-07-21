@@ -201,6 +201,46 @@ static int strToFloat(char *to_convert, float *f) {
   return 1;
 }
 
+#define STRING_SPLIT_DEFINE(type, Type) \
+static void strSplit##Type(const char *strLiteral, const char *delimiter, type *pOutputs, int len) { \
+  char *token, *str, *tofree;                                                           \
+  int offset = 0;                                                                       \
+  tofree = str = strdup(strLiteral);                                                    \
+  while ((token = strsep(&str, delimiter)) && offset < len) {                           \
+    type t;                                                                             \
+    if (!strTo##Type(token, &t)) {                                                      \
+      t = (type)0;                                                                      \
+    }                                                                                   \
+    pOutputs[offset] = t;                                                                \
+    offset++;                                                                           \
+  }                                                                                     \
+  free(tofree);                                                                         \
+}
+
+STRING_SPLIT_DEFINE(int, Int)
+STRING_SPLIT_DEFINE(float, Float)
+
+//assume that the string is compact
+#define PARSE_GLSL_VECTOR(glType, typeLen, type, Type)                      \
+static int parseGlSL##Type##Vector(const char* str,type *pOutput,int *pShape){      \
+  int len = (int)strlen(str);                                               \
+  int bodyPos = typeLen + 2;                                                \
+  if (memcmp(str,glType, typeLen) != 0) {                                   \
+    return 0;                                                               \
+  }                                                                         \
+  *pShape = (int) (str[typeLen]  - '0');                                    \
+  int bodyLen = len - bodyPos;                                              \
+  char *body = (char *) av_malloc(sizeof(char) * bodyLen);                     \
+  strncpy(body, str + bodyPos, (size_t) bodyLen - 1);                       \
+  body[bodyLen-1] = '\0';                                                   \
+  strSplit##Type(body, ",", pOutput, *pShape);                               \
+  av_free(body);                                                               \
+  return 1;                                                                 \
+}
+
+PARSE_GLSL_VECTOR("vec", 3, float, Float)
+PARSE_GLSL_VECTOR("ivec", 4, int, Int)
+
 static GLuint build_shader(AVFilterContext *ctx, const GLchar *shader_source, GLenum type)
 {
   GLuint shader = glCreateShader(type);
@@ -350,21 +390,50 @@ static void setup_uniforms(AVFilterLink *fromLink)
     for(int i = 0;i<sa.len;i+=2){
       GLint location = glGetUniformLocation(c->program, sa.strings[i]);
       if (location >= 0) {
-        int iv;
-        float fv;
-        if (strToInt(sa.strings[i + 1], &iv)) {
-          av_log(ctx, AV_LOG_INFO, "setting: uniform int %s = %s\n",sa.strings[i],sa.strings[i+1]);
-          glUniform1i(location, iv);
-        } else if (strToFloat(sa.strings[i + 1], &fv)) {
-          av_log(ctx, AV_LOG_INFO, "setting: uniform float %s = %s\n",sa.strings[i],sa.strings[i+1]);
-          glUniform1f(location, fv);
+          int intVar;
+          float floatVar;
+          int vecShape = 0;
+          int intVec[4] = {0};
+          float floatVec[4] = {0.0};
+          if (parseGlSLFloatVector(sa.strings[i + 1], floatVec, &vecShape)) {
+            switch (vecShape) {
+              case 2:
+                glUniform2f(location, floatVec[0], floatVec[1]);
+                break;
+              case 3:
+                glUniform3f(location, floatVec[0], floatVec[1], floatVec[2]);
+                break;
+              case 4:
+                glUniform4f(location, floatVec[0], floatVec[1], floatVec[2], floatVec[3]);
+                break;
+              default:
+                break;
+            }
+          } else if (parseGlSLIntVector(sa.strings[i + 1], intVec, &vecShape)) {
+            switch (vecShape) {
+              case 2:
+                glUniform2i(location, intVec[0], intVec[1]);
+                break;
+              case 3:
+                glUniform3i(location, intVec[0], intVec[1], intVec[2]);
+                break;
+              case 4:
+                glUniform4i(location, intVec[0], intVec[1], intVec[2], intVec[3]);
+              default:
+                break;
+            }
+          } else if (strToInt(sa.strings[i + 1], &intVar)) {
+            glUniform1i(location, intVar);
+          } else if (strToFloat(sa.strings[i + 1], &floatVar)) {
+            glUniform1f(location, floatVar);
+          } else {
+            av_log(ctx, AV_LOG_ERROR, "value %s not supported,(use int or float)", sa.strings[i + 1]);
+          }
         } else {
-          av_log(ctx, AV_LOG_ERROR, "value %s not supported,(use int or float)",sa.strings[i+1]);
+          av_log(ctx, AV_LOG_ERROR, "can't get location of uniform: %s,fail set value: %s\n", sa.strings[i],
+                 sa.strings[i + 1]);
         }
-      }else {
-        av_log(ctx, AV_LOG_ERROR , "can't get location of uniform: %s,fail set value: %s\n",sa.strings[i], sa.strings[i+1]);
       }
-    }
     //free strings;
     for (int i = 0; i < sa.len; i++) {
       free(sa.strings[i]);
