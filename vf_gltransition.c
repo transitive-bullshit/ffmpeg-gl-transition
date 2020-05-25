@@ -377,16 +377,25 @@ static AVFrame *apply_transition(FFFrameSync *fs,
   // av_log(ctx, AV_LOG_ERROR, "transition '%s' %llu %f %f\n", c->source, fs->pts - c->first_pts, ts, progress);
   glUniform1f(c->progress, progress);
 
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, c->from);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, fromFrame->linesize[0] / 3);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fromLink->w, fromLink->h, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, fromFrame->data[0]);
 
   glActiveTexture(GL_TEXTURE0 + 1);
   glBindTexture(GL_TEXTURE_2D, c->to);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, toFrame->linesize[0] / 3);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, toLink->w, toLink->h, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, toFrame->data[0]);
 
   glDrawArrays(GL_TRIANGLES, 0, 6);
+  glPixelStorei(GL_PACK_ROW_LENGTH, outFrame->linesize[0] / 3);
   glReadPixels(0, 0, outLink->w, outLink->h, PIXEL_FORMAT, GL_UNSIGNED_BYTE, (GLvoid *)outFrame->data[0]);
+
+  glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
   av_frame_free(&fromFrame);
 
