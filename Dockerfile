@@ -324,16 +324,21 @@ RUN \
         cd ${DIR} && \
         curl -sLO https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz && \
         tar -zx --strip-components=1 -f ffmpeg-${FFMPEG_VERSION}.tar.gz
-## ffmpeg-gl-transition https://github.com/transitive-bullshit/ffmpeg-gl-transition
+## ffmpeg-gl-transition https://github.com/livingbio/ffmpeg-gl-transition
+# RUN \
+#         DIR=/tmp/ffmpeg-gl-transition && \
+#         FFMPEG_DIR=/tmp/ffmpeg && \
+#         cd ${FFMPEG_DIR} && \
+#         git clone https://github.com/livingbio/ffmpeg-gl-transition.git ${DIR} && \
+#         cp ${DIR}/vf_gltransition.c libavfilter/ && \
+#         git apply ${DIR}/ffmpeg.diff && \
+#         rm -rf ${DIR}
+COPY ./vf_gltransition.c /tmp/ffmpeg/libavfilter/
+COPY ./ffmpeg.diff /tmp/ffmpeg/
 RUN \
-        DIR=/tmp/ffmpeg-gl-transition && \
-        FFMPEG_DIR=/tmp/ffmpeg && \
-        cd ${FFMPEG_DIR} && \
-        git clone https://github.com/transitive-bullshit/ffmpeg-gl-transition.git ${DIR} && \
-        sed -i '10,13d' ${DIR}/vf_gltransition.c && \
-        cp ${DIR}/vf_gltransition.c libavfilter/ && \
-        git apply ${DIR}/ffmpeg.diff && \
-        rm -rf ${DIR}
+        DIR=/tmp/ffmpeg && \
+        cd ${DIR} && \
+        git apply ${DIR}/ffmpeg.diff
 
 RUN \
         DIR=/tmp/ffmpeg && \
