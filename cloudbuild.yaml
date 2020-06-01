@@ -10,5 +10,8 @@ steps:
   ]
   id: 'build'
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME']
-  id: 'push'
+  args: ['push', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME:$TAG_NAME']
+  id: 'push-tag'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME:latest']
+  id: 'push-latest'
