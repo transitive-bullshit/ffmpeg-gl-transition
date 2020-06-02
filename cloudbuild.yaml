@@ -4,14 +4,14 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
-    '-t', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME:$TAG_NAME',
-    '-t', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME:latest',
+    '-t', 'asia.gcr.io/$PROJECT_ID/ffmpeg-gl-transition:$TAG_NAME',
+    '-t', 'asia.gcr.io/$PROJECT_ID/ffmpeg-gl-transition:latest',
     '.'
   ]
   id: 'build'
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME:$TAG_NAME']
+  args: ['push', 'asia.gcr.io/$PROJECT_ID/ffmpeg-gl-transition:$TAG_NAME']
   id: 'push-tag'
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'asia.gcr.io/$PROJECT_ID/$REPO_NAME:latest']
+  args: ['push', 'asia.gcr.io/$PROJECT_ID/ffmpeg-gl-transition:latest']
   id: 'push-latest'
