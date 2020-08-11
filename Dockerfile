@@ -18,34 +18,33 @@ RUN     apt-get -yqq update && \
 
 FROM    base AS build
 
-ENV     FFMPEG_VERSION=4.2.3 \
+ENV     FFMPEG_VERSION=4.3.1 \
         AOM_VERSION=2.0.0 \
         FDKAAC_VERSION=2.0.1 \
         FONTCONFIG_VERSION=2.13.92 \
         FREETYPE_VERSION=2.10.2 \
-        FRIBIDI_VERSION=1.0.9 \
+        FRIBIDI_VERSION=1.0.10 \
         KVAZAAR_VERSION=2.0.0 \
         LAME_VERSION=3.100 \
         LIBASS_VERSION=0.14.0 \
         LIBVIDSTAB_VERSION=1.1.0 \
-        XVID_VERSION=1.3.4 \
+        XVID_VERSION=1.3.7 \
         OGG_VERSION=1.3.4 \
         OPENCOREAMR_VERSION=0.1.5 \
         OPUS_VERSION=1.3.1 \
         OPENJPEG_VERSION=2.3.1 \
         THEORA_VERSION=1.1.1 \
-        VORBIS_VERSION=1.3.6 \
-        VPX_VERSION=1.8.2 \
+        VORBIS_VERSION=1.3.7 \
+        VPX_VERSION=1.9.0 \
         WEBP_VERSION=1.1.0 \
         X265_VERSION=3.2.1 \
         LIBZMQ_VERSION=4.3.2 \
         SRC=/usr/local
 
-ARG     LD_LIBRARY_PATH=/opt/ffmpeg/lib
 ARG     MAKEFLAGS="-j2"
 ARG     PKG_CONFIG_PATH="/opt/ffmpeg/share/pkgconfig:/opt/ffmpeg/lib/pkgconfig:/opt/ffmpeg/lib64/pkgconfig:/opt/ffmpeg/lib/x86_64-linux-gnu/pkgconfig"
 ARG     PREFIX=/opt/ffmpeg
-ARG     LD_LIBRARY_PATH="/opt/ffmpeg/lib:/opt/ffmpeg/lib64:/usr/lib64:/usr/lib:/lib64:/lib"
+ARG     LD_LIBRARY_PATH="/opt/ffmpeg/lib:/opt/ffmpeg/lib64"
 ARG     CFLAGS=-I${PREFIX}/include/
 
 RUN     buildDeps="autoconf \
@@ -157,10 +156,8 @@ RUN \
 ## libvpx https://www.webmproject.org/code/
 RUN \
         DIR=/tmp/vpx && \
-        mkdir -p ${DIR} && \
+        git clone --branch v${VPX_VERSION} --depth 1 https://chromium.googlesource.com/webm/libvpx ${DIR} && \
         cd ${DIR} && \
-        curl -sL https://codeload.github.com/webmproject/libvpx/tar.gz/v${VPX_VERSION} | \
-        tar -zx --strip-components=1 && \
         ./configure --prefix=${PREFIX} --enable-vp8 --enable-vp9 --enable-vp9-highbitdepth --enable-pic --enable-shared \
         --disable-debug --disable-examples --disable-docs --disable-install-bins && \
         make && \
@@ -169,10 +166,9 @@ RUN \
 ## libwebp https://developers.google.com/speed/webp/
 RUN \
         DIR=/tmp/vebp && \
-        mkdir -p ${DIR} && \
+        git clone --branch v${WEBP_VERSION} --depth 1 https://chromium.googlesource.com/webm/libwebp ${DIR} && \
         cd ${DIR} && \
-        curl -sL https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-${WEBP_VERSION}.tar.gz | \
-        tar -zx --strip-components=1 && \
+        ./autogen.sh && \
         ./configure --prefix=${PREFIX} --enable-shared && \
         make && \
         make install && \
@@ -188,12 +184,12 @@ RUN \
         make && \
         make install && \
         rm -rf ${DIR}
-## xvid https://www.xvid.com/
+## xvid https://labs.xvid.com/source/#Release
 RUN \
         DIR=/tmp/xvid && \
         mkdir -p ${DIR} && \
         cd ${DIR} && \
-        curl -sLO http://downloads.xvid.org/downloads/xvidcore-${XVID_VERSION}.tar.gz && \
+        curl -sLO http://downloads.xvid.com/downloads/xvidcore-${XVID_VERSION}.tar.gz && \
         tar -zx --strip-components=1 -f xvidcore-${XVID_VERSION}.tar.gz && \
         cd build/generic && \
         ./configure --prefix=${PREFIX} --bindir=${PREFIX}/bin && \
@@ -245,7 +241,7 @@ RUN \
         make && \
         make install && \
         rm -rf ${DIR}
-## fridibi https://www.fribidi.org/
+## fridibi https://github.com/fribidi/fribidi/
 RUN \
         DIR=/tmp/fribidi && \
         mkdir -p ${DIR} && \
@@ -396,7 +392,7 @@ RUN \
 
 FROM        base AS release
 
-ENV         LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:/usr/lib:/usr/lib64:/lib:/lib64
+ENV         LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64
 
 CMD         ["--help"]
 ENTRYPOINT  ["ffmpeg"]
