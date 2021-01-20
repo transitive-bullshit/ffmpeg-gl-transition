@@ -22,6 +22,7 @@
 
 #ifdef GL_TRANSITION_USING_EGL
 # include <EGL/egl.h>
+# include <EGL/eglext.h>
 #else
 # include <GLFW/glfw3.h>
 #endif
@@ -291,7 +292,22 @@ static int setup_gl(AVFilterLink *inLink)
 #ifdef GL_TRANSITION_USING_EGL
   //init EGL
   // 1. Initialize EGL
-  c->eglDpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+  // c->eglDpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+
+  #define MAX_DEVICES 4
+  EGLDeviceEXT eglDevs[MAX_DEVICES];
+  EGLint numDevices;
+
+  PFNEGLQUERYDEVICESEXTPROC eglQueryDevicesEXT =(PFNEGLQUERYDEVICESEXTPROC)
+  eglGetProcAddress("eglQueryDevicesEXT");
+
+  eglQueryDevicesEXT(MAX_DEVICES, eglDevs, &numDevices);
+
+  PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT =  (PFNEGLGETPLATFORMDISPLAYEXTPROC)
+  eglGetProcAddress("eglGetPlatformDisplayEXT");
+
+  c->eglDpy = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, eglDevs[0], 0);
+
   EGLint major, minor;
   eglInitialize(c->eglDpy, &major, &minor);
   av_log(ctx, AV_LOG_DEBUG, "%d%d", major, minor);
