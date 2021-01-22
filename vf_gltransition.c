@@ -7,6 +7,7 @@
 #include "libavutil/opt.h"
 #include "internal.h"
 #include "framesync.h"
+#include "errno.h"
 
 #ifndef __APPLE__
 # define GL_TRANSITION_USING_EGL //remove this line if you don't want to use EGL
@@ -99,6 +100,7 @@ typedef struct {
   double duration;
   double offset;
   char *source;
+  char *uniforms;
 
   // timestamp of the first frame in the output, in the timebase units
   int64_t first_pts;
@@ -133,10 +135,112 @@ static const AVOption gltransition_options[] = {
   { "duration", "transition duration in seconds", OFFSET(duration), AV_OPT_TYPE_DOUBLE, {.dbl=1.0}, 0, DBL_MAX, FLAGS },
   { "offset", "delay before startingtransition in seconds", OFFSET(offset), AV_OPT_TYPE_DOUBLE, {.dbl=0.0}, 0, DBL_MAX, FLAGS },
   { "source", "path to the gl-transition source file (defaults to basic fade)", OFFSET(source), AV_OPT_TYPE_STRING, {.str = NULL}, CHAR_MIN, CHAR_MAX, FLAGS },
+  { "uniforms", "uniform vars setting, e.g. uniforms='some_var=1.0&other_var=1'", OFFSET(uniforms), AV_OPT_TYPE_STRING, {.str=NULL}, CHAR_MIN, CHAR_MAX, FLAGS },
   {NULL}
 };
 
+typedef struct {
+  char **strings;
+  int len;
+} StringArray_t;
+
 FRAMESYNC_DEFINE_CLASS(gltransition, GLTransitionContext, fs);
+
+static StringArray_t parseQueryString (const char *str_query)  {
+  StringArray_t sa;
+  int offset = 0;
+  int offset_seg = 0;
+  int cursor_start = 0;
+  int cursor_end= 0;
+  int cnt_seg = 1;
+  auto len = (int) (strlen(str_query));
+
+  for (int i = 0; i < len; i++) {
+    if (str_query[i] == '=' || str_query[i] == '&') {
+      cnt_seg++;
+    }
+  }
+  char **strings = (char **) av_malloc(sizeof(char *) * cnt_seg);
+  sa.len = cnt_seg;
+
+  for (; offset <= len; offset++) {
+    if (str_query[offset] == '=' || str_query[offset] == '&' || offset == len) {
+      int word_len = cursor_end - cursor_start;
+      char *seg = (char *) malloc(sizeof(char) * (word_len+ 1));
+      strncpy(seg, str_query+cursor_start, (size_t)(word_len));
+      seg[word_len] = '\0';
+      strings [offset_seg] = seg;
+      offset_seg++;
+      cursor_end++;
+      cursor_start = cursor_end;
+    } else {
+      cursor_end++;
+    }
+  }
+  sa.strings = strings ;
+  return sa;
+}
+
+
+static int strToInt(char *to_convert, int *i) {
+  char *p = to_convert;
+  errno = 0;
+  *i = (int) strtol(to_convert, &p, 10);
+  if (errno != 0 || to_convert == p || *p != 0) {
+    return 0;
+  }
+  return 1;
+}
+
+static int strToFloat(char *to_convert, float *f) {
+  char *p = to_convert;
+  errno = 0;
+  *f = strtof(to_convert, &p);
+  if (errno != 0 || to_convert == p || *p != 0) {
+    return 0;
+  }
+  return 1;
+}
+
+#define STRING_SPLIT_DEFINE(type, Type) \
+static void strSplit##Type(const char *strLiteral, const char *delimiter, type *pOutputs, int len) { \
+  char *token, *str, *tofree;                                                           \
+  int offset = 0;                                                                       \
+  tofree = str = strdup(strLiteral);                                                    \
+  while ((token = strsep(&str, delimiter)) && offset < len) {                           \
+    type t;                                                                             \
+    if (!strTo##Type(token, &t)) {                                                      \
+      t = (type)0;                                                                      \
+    }                                                                                   \
+    pOutputs[offset] = t;                                                                \
+    offset++;                                                                           \
+  }                                                                                     \
+  free(tofree);                                                                         \
+}
+
+STRING_SPLIT_DEFINE(int, Int)
+STRING_SPLIT_DEFINE(float, Float)
+
+//assume that the string is compact
+#define PARSE_GLSL_VECTOR(glType, typeLen, type, Type)                      \
+static int parseGlSL##Type##Vector(const char* str,type *pOutput,int *pShape){      \
+  int len = (int)strlen(str);                                               \
+  int bodyPos = typeLen + 2;                                                \
+  if (memcmp(str,glType, typeLen) != 0) {                                   \
+    return 0;                                                               \
+  }                                                                         \
+  *pShape = (int) (str[typeLen]  - '0');                                    \
+  int bodyLen = len - bodyPos;                                              \
+  char *body = (char *) av_malloc(sizeof(char) * bodyLen);                     \
+  strncpy(body, str + bodyPos, (size_t) bodyLen - 1);                       \
+  body[bodyLen-1] = '\0';                                                   \
+  strSplit##Type(body, ",", pOutput, *pShape);                               \
+  av_free(body);                                                               \
+  return 1;                                                                 \
+}
+
+PARSE_GLSL_VECTOR("vec", 3, float, Float)
+PARSE_GLSL_VECTOR("ivec", 4, int, Int)
 
 static GLuint build_shader(AVFilterContext *ctx, const GLchar *shader_source, GLenum type)
 {
@@ -281,6 +385,61 @@ static void setup_uniforms(AVFilterLink *fromLink)
   // TODO: initialize this in config_props for "to" input
   c->_toR = glGetUniformLocation(c->program, "_toR");
   glUniform1f(c->_toR, fromLink->w / (float)fromLink->h);
+
+  StringArray_t sa = parseQueryString(c->uniforms);
+  if(sa.len >0){
+    for(int i = 0;i<sa.len;i+=2){
+      GLint location = glGetUniformLocation(c->program, sa.strings[i]);
+      if (location >= 0) {
+          int intVar;
+          float floatVar;
+          int vecShape = 0;
+          int intVec[4] = {0};
+          float floatVec[4] = {0.0};
+          if (parseGlSLFloatVector(sa.strings[i + 1], floatVec, &vecShape)) {
+            switch (vecShape) {
+              case 2:
+                glUniform2f(location, floatVec[0], floatVec[1]);
+                break;
+              case 3:
+                glUniform3f(location, floatVec[0], floatVec[1], floatVec[2]);
+                break;
+              case 4:
+                glUniform4f(location, floatVec[0], floatVec[1], floatVec[2], floatVec[3]);
+                break;
+              default:
+                break;
+            }
+          } else if (parseGlSLIntVector(sa.strings[i + 1], intVec, &vecShape)) {
+            switch (vecShape) {
+              case 2:
+                glUniform2i(location, intVec[0], intVec[1]);
+                break;
+              case 3:
+                glUniform3i(location, intVec[0], intVec[1], intVec[2]);
+                break;
+              case 4:
+                glUniform4i(location, intVec[0], intVec[1], intVec[2], intVec[3]);
+              default:
+                break;
+            }
+          } else if (strToInt(sa.strings[i + 1], &intVar)) {
+            glUniform1i(location, intVar);
+          } else if (strToFloat(sa.strings[i + 1], &floatVar)) {
+            glUniform1f(location, floatVar);
+          } else {
+            av_log(ctx, AV_LOG_ERROR, "value %s not supported, supported: int float ivec vec)", sa.strings[i + 1]);
+          }
+        } else {
+          av_log(ctx, AV_LOG_ERROR, "can't get location of uniform: %s,fail set value: %s\n", sa.strings[i],
+                 sa.strings[i + 1]);
+        }
+      }
+    //free strings;
+    for (int i = 0; i < sa.len; i++) {
+      free(sa.strings[i]);
+    }
+  }
 }
 
 static int setup_gl(AVFilterLink *inLink)
