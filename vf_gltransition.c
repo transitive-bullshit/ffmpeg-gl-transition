@@ -101,7 +101,7 @@ typedef struct {
   char *extra_texture;
   int alpha;
 
-  // decided by alpha
+  //channel info
   int pix_fmt;
   int channel_num;
 
@@ -140,11 +140,15 @@ static const AVOption gltransition_options[] = {
   { "offset", "delay before startingtransition in seconds", OFFSET(offset), AV_OPT_TYPE_DOUBLE, {.dbl=0.0}, 0, DBL_MAX, FLAGS },
   { "source", "path to the gl-transition source file (defaults to basic fade)", OFFSET(source), AV_OPT_TYPE_STRING, {.str = NULL}, CHAR_MIN, CHAR_MAX, FLAGS },
   { "extra_texture", "path to the gl-transition extra_texture file", OFFSET(extra_texture), AV_OPT_TYPE_STRING, {.str = NULL}, CHAR_MIN, CHAR_MAX, FLAGS },
-  { "alpha", "keep alpha channel", OFFSET(alpha), AV_OPT_TYPE_INT, {.dbl=0}, 0, DBL_MAX, FLAGS },
   {NULL}
 };
 
 FRAMESYNC_DEFINE_CLASS(gltransition, GLTransitionContext, fs);
+
+static const enum AVPixelFormat alpha_pix_fmts[] = {
+    AV_PIX_FMT_ARGB, AV_PIX_FMT_ABGR, AV_PIX_FMT_RGBA,
+    AV_PIX_FMT_BGRA, AV_PIX_FMT_NONE
+};
 
 static GLuint build_shader(AVFilterContext *ctx, const GLchar *shader_source, GLenum type)
 {
@@ -319,6 +323,17 @@ static int setup_gl(AVFilterLink *inLink)
   AVFilterContext *ctx = inLink->dst;
   GLTransitionContext *c = ctx->priv;
 
+  c->alpha = ff_fmt_is_in(inLink->format, alpha_pix_fmts);
+  av_log(ctx, AV_LOG_DEBUG, "c->alpha: %d, inLink->format: %d\n", c->alpha, inLink->format);
+
+  //get alpha info
+  if (c->alpha) {
+    c->pix_fmt = GL_RGBA;
+    c->channel_num = 4;
+  } else {
+    c->pix_fmt = GL_RGB;
+    c->channel_num = 3;
+  }
 
 #ifdef GL_TRANSITION_USING_EGL
   //init EGL
@@ -524,29 +539,15 @@ static av_cold void uninit(AVFilterContext *ctx) {
 
 static int query_formats(AVFilterContext *ctx)
 {
-    GLTransitionContext *c = ctx->priv;
-    static const enum AVPixelFormat pix_fmts_rgb[] = {
+    static const enum AVPixelFormat pix_fmts[] = {
         AV_PIX_FMT_RGB24,    AV_PIX_FMT_BGR24,
-        AV_PIX_FMT_ARGB,     AV_PIX_FMT_ABGR,
-        AV_PIX_FMT_RGBA,     AV_PIX_FMT_BGRA,
-        AV_PIX_FMT_NONE
-    };
-    static const enum AVPixelFormat pix_fmts_rgba[] = {
         AV_PIX_FMT_ARGB,     AV_PIX_FMT_ABGR,
         AV_PIX_FMT_RGBA,     AV_PIX_FMT_BGRA,
         AV_PIX_FMT_NONE
     };
     AVFilterFormats *fmts_list;
 
-    if (c->alpha) {
-        c->pix_fmt = GL_RGBA;
-        c->channel_num = 4;
-        fmts_list = ff_make_format_list(pix_fmts_rgba);
-    } else {
-        c->pix_fmt = GL_RGB;
-        c->channel_num = 3;
-        fmts_list = ff_make_format_list(pix_fmts_rgb);
-    }
+    fmts_list = ff_make_format_list(pix_fmts);
     if (!fmts_list) {
       return AVERROR(ENOMEM);
     }
