@@ -1,14 +1,13 @@
 # ffmpeg - http://ffmpeg.org/download.html
 #
-# From https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu
-#
 # https://hub.docker.com/r/jrottenberg/ffmpeg/
-# https://github.com/jrottenberg/ffmpeg
-# ref: https://github.com/jrottenberg/ffmpeg/blob/main/docker-images/4.4/scratch313/Dockerfile
+#
+#
 
 FROM        alpine:3.13 AS build
 
 WORKDIR     /tmp/workdir
+
 ENV         FFMPEG_VERSION=4.4.2 \
         AOM_VERSION=v1.0.0 \
         CHROMAPRINT_VERSION=1.5.0 \
@@ -465,7 +464,7 @@ RUN \
         ./autogen.sh && \
         ./configure --prefix="${PREFIX}" && \
         make && \
-        make check && \
+        # make check && \
         make install && \
         rm -rf ${DIR}
 
@@ -517,15 +516,17 @@ RUN  \
 
 
 ## BEGIN: ffmpeg-gl-transition
+RUN apk add mesa-egl mesa-gl glu glu-dev glew-dev glfw-dev
 COPY ./vf_gltransition.c /tmp/ffmpeg/libavfilter/
 COPY ./ffmpeg.diff /tmp/ffmpeg/
 RUN \
         DIR=/tmp/ffmpeg && \
         cd ${DIR} && \
         git apply ${DIR}/ffmpeg.diff
-## END
+# END
 
 
+## Build ffmpeg https://ffmpeg.org/
 RUN  \
         DIR=/tmp/ffmpeg && cd ${DIR} && \
         ./configure \
