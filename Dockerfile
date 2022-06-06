@@ -536,6 +536,7 @@ RUN  \
         --enable-avresample \
         --enable-fontconfig \
         --enable-gpl \
+        --enable-opengl \
         --enable-libaom \
         --enable-libaribb24 \
         --enable-libass \
@@ -565,10 +566,12 @@ RUN  \
         --enable-shared \
         --enable-small \
         --enable-version3 \
+	--enable-filter=gltransition \
         --extra-cflags="-I${PREFIX}/include" \
         --extra-ldflags="-L${PREFIX}/lib" \
         --extra-libs=-ldl \
         --extra-libs=-lpthread \
+	--extra-libs='-lGLEW -lglfw' \
         --prefix="${PREFIX}" && \
         make clean && \
         make && \
