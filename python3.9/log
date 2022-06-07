@@ -1,0 +1,688 @@
+Sending build context to Docker daemon   25.6kB
+Step 1/67 : FROM        python:3.9-slim AS base
+ ---> e86cb69f6aef
+Step 2/67 : WORKDIR     /tmp/workdir
+ ---> Using cache
+ ---> 19491742ba77
+Step 3/67 : RUN     apt-get -yqq update &&         apt-get install -yq --no-install-recommends ca-certificates expat libgomp1 &&         apt-get autoremove -y &&         apt-get clean -y
+ ---> Using cache
+ ---> d03f969edb99
+Step 4/67 : FROM base as build
+ ---> d03f969edb99
+Step 5/67 : ENV         FFMPEG_VERSION=4.4.2     AOM_VERSION=v1.0.0     CHROMAPRINT_VERSION=1.5.0     FDKAAC_VERSION=0.1.5     FONTCONFIG_VERSION=2.12.4     FREETYPE_VERSION=2.10.4     FRIBIDI_VERSION=0.19.7     KVAZAAR_VERSION=2.0.0     LAME_VERSION=3.100     LIBASS_VERSION=0.13.7     LIBPTHREAD_STUBS_VERSION=0.4     LIBVIDSTAB_VERSION=1.1.0     LIBXCB_VERSION=1.13.1     XCBPROTO_VERSION=1.13     OGG_VERSION=1.3.2     OPENCOREAMR_VERSION=0.1.5     OPUS_VERSION=1.2     OPENJPEG_VERSION=2.1.2     THEORA_VERSION=1.1.1     VORBIS_VERSION=1.3.5     VPX_VERSION=1.8.0     WEBP_VERSION=1.0.2     X264_VERSION=20170226-2245-stable     X265_VERSION=3.4     XAU_VERSION=1.0.9     XORG_MACROS_VERSION=1.19.2     XPROTO_VERSION=7.0.31     XVID_VERSION=1.3.4     LIBXML2_VERSION=2.9.12     LIBBLURAY_VERSION=1.1.2     LIBZMQ_VERSION=4.3.2     LIBSRT_VERSION=1.4.1     LIBARIBB24_VERSION=1.0.3     LIBPNG_VERSION=1.6.9     LIBVMAF_VERSION=2.1.1     SRC=/usr/local
+ ---> Using cache
+ ---> dd5c6afc926a
+Step 6/67 : ARG         FREETYPE_SHA256SUM="5eab795ebb23ac77001cfb68b7d4d50b5d6c7469247b0b01b2c953269f658dac freetype-2.10.4.tar.gz"
+ ---> Using cache
+ ---> 26f0c0831316
+Step 7/67 : ARG         FRIBIDI_SHA256SUM="3fc96fa9473bd31dcb5500bdf1aa78b337ba13eb8c301e7c28923fea982453a8 0.19.7.tar.gz"
+ ---> Using cache
+ ---> c1810e6c4f91
+Step 8/67 : ARG         LIBASS_SHA256SUM="8fadf294bf701300d4605e6f1d92929304187fca4b8d8a47889315526adbafd7 0.13.7.tar.gz"
+ ---> Using cache
+ ---> 29813ab22443
+Step 9/67 : ARG         LIBVIDSTAB_SHA256SUM="14d2a053e56edad4f397be0cb3ef8eb1ec3150404ce99a426c4eb641861dc0bb v1.1.0.tar.gz"
+ ---> Using cache
+ ---> 5ca98b56e52d
+Step 10/67 : ARG         OGG_SHA256SUM="e19ee34711d7af328cb26287f4137e70630e7261b17cbe3cd41011d73a654692 libogg-1.3.2.tar.gz"
+ ---> Using cache
+ ---> bf5818615313
+Step 11/67 : ARG         OPUS_SHA256SUM="77db45a87b51578fbc49555ef1b10926179861d854eb2613207dc79d9ec0a9a9 opus-1.2.tar.gz"
+ ---> Using cache
+ ---> 2c0749affc75
+Step 12/67 : ARG         THEORA_SHA256SUM="40952956c47811928d1e7922cda3bc1f427eb75680c3c37249c91e949054916b libtheora-1.1.1.tar.gz"
+ ---> Using cache
+ ---> 66cbb0d20527
+Step 13/67 : ARG         VORBIS_SHA256SUM="6efbcecdd3e5dfbf090341b485da9d176eb250d893e3eb378c428a2db38301ce libvorbis-1.3.5.tar.gz"
+ ---> Using cache
+ ---> 16f7a77e0c16
+Step 14/67 : ARG         XVID_SHA256SUM="4e9fd62728885855bc5007fe1be58df42e5e274497591fec37249e1052ae316f xvidcore-1.3.4.tar.gz"
+ ---> Using cache
+ ---> 99d7091d4ddc
+Step 15/67 : ARG         LIBBLURAY_SHA256SUM="a3dd452239b100dc9da0d01b30e1692693e2a332a7d29917bf84bb10ea7c0b42 libbluray-1.1.2.tar.bz2"
+ ---> Using cache
+ ---> 98064c591fff
+Step 16/67 : ARG         LIBZMQ_SHA256SUM="02ecc88466ae38cf2c8d79f09cfd2675ba299a439680b64ade733e26a349edeb v4.3.2.tar.gz"
+ ---> Using cache
+ ---> 3143ba634fae
+Step 17/67 : ARG         LIBARIBB24_SHA256SUM="f61560738926e57f9173510389634d8c06cabedfa857db4b28fb7704707ff128 v1.0.3.tar.gz"
+ ---> Using cache
+ ---> 596a94e958fe
+Step 18/67 : ARG         LIBVMAF_SHA256SUM="e7fc00ae1322a7eccfcf6d4f1cdf9c67eec8058709887c8c6c3795c617326f77 v2.1.1.tar.gz"
+ ---> Using cache
+ ---> ddbabe720d17
+Step 19/67 : ARG         LD_LIBRARY_PATH=/opt/ffmpeg/lib
+ ---> Using cache
+ ---> 616522b9af93
+Step 20/67 : ARG         MAKEFLAGS="-j2"
+ ---> Using cache
+ ---> 62336fed79ba
+Step 21/67 : ARG         PKG_CONFIG_PATH="/opt/ffmpeg/share/pkgconfig:/opt/ffmpeg/lib/pkgconfig:/opt/ffmpeg/lib64/pkgconfig"
+ ---> Using cache
+ ---> ca1db2a862ce
+Step 22/67 : ARG         PREFIX=/opt/ffmpeg
+ ---> Using cache
+ ---> 17b0491b96c6
+Step 23/67 : ARG         LD_LIBRARY_PATH="/opt/ffmpeg/lib:/opt/ffmpeg/lib64"
+ ---> Using cache
+ ---> 1e3a5f885e63
+Step 24/67 : ARG DEBIAN_FRONTEND=noninteractive
+ ---> Using cache
+ ---> 00a2d7297184
+Step 25/67 : RUN      buildDeps="autoconf                     automake                     cmake                     curl                     bzip2                     libexpat1-dev                     g++                     gcc                     git                     gperf                     libtool                     make                     meson                     nasm                     perl                     pkg-config                     python                     libssl-dev                     yasm                     zlib1g-dev" &&         apt-get -yqq update &&         apt-get install -yq --no-install-recommends ${buildDeps}
+ ---> Using cache
+ ---> b35603a5dda9
+Step 26/67 : RUN         if which meson || false; then         echo "Building VMAF." &&         DIR=/tmp/vmaf &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://github.com/Netflix/vmaf/archive/v${LIBVMAF_VERSION}.tar.gz &&         tar -xz --strip-components=1 -f v${LIBVMAF_VERSION}.tar.gz &&         cd /tmp/vmaf/libvmaf &&         meson build --buildtype release --prefix=${PREFIX} &&         ninja -vC build &&         ninja -vC build install &&         mkdir -p ${PREFIX}/share/model/ &&         cp -r /tmp/vmaf/model/* ${PREFIX}/share/model/ &&         rm -rf ${DIR};         else         echo "VMAF skipped.";         fi
+ ---> Using cache
+ ---> beeb1c843d42
+Step 27/67 : RUN         DIR=/tmp/opencore-amr &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sL https://sourceforge.net/projects/opencore-amr/files/opencore-amr/opencore-amr-${OPENCOREAMR_VERSION}.tar.gz/download |         tar -zx --strip-components=1 &&         ./configure --prefix="${PREFIX}" --enable-shared  &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 346fa0068fbb
+Step 28/67 : RUN         DIR=/tmp/x264 &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sL https://download.videolan.org/pub/videolan/x264/snapshots/x264-snapshot-${X264_VERSION}.tar.bz2 |         tar -jx --strip-components=1 &&         ./configure --prefix="${PREFIX}" --enable-shared --enable-pic --disable-cli &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 4af9e84628b5
+Step 29/67 : RUN         DIR=/tmp/x265 &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sL https://github.com/videolan/x265/archive/refs/tags/${X265_VERSION}.tar.gz |         tar -zx &&         cd x265-${X265_VERSION}/build/linux &&         sed -i "/-DEXTRA_LIB/ s/$/ -DCMAKE_INSTALL_PREFIX=\${PREFIX}/" multilib.sh &&         sed -i "/^cmake/ s/$/ -DENABLE_CLI=OFF/" multilib.sh &&         ./multilib.sh &&         make -C 8bit install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 225ed146fc3f
+Step 30/67 : RUN         DIR=/tmp/ogg &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO http://downloads.xiph.org/releases/ogg/libogg-${OGG_VERSION}.tar.gz &&         echo ${OGG_SHA256SUM} | sha256sum --check &&         tar -zx --strip-components=1 -f libogg-${OGG_VERSION}.tar.gz &&         ./configure --prefix="${PREFIX}" --enable-shared  &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> d340bffd907f
+Step 31/67 : RUN         DIR=/tmp/opus &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://archive.mozilla.org/pub/opus/opus-${OPUS_VERSION}.tar.gz &&         echo ${OPUS_SHA256SUM} | sha256sum --check &&         tar -zx --strip-components=1 -f opus-${OPUS_VERSION}.tar.gz &&         autoreconf -fiv &&         ./configure --prefix="${PREFIX}" --enable-shared &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 8b86b7ece6f6
+Step 32/67 : RUN         DIR=/tmp/vorbis &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO http://downloads.xiph.org/releases/vorbis/libvorbis-${VORBIS_VERSION}.tar.gz &&         echo ${VORBIS_SHA256SUM} | sha256sum --check &&         tar -zx --strip-components=1 -f libvorbis-${VORBIS_VERSION}.tar.gz &&         ./configure --prefix="${PREFIX}" --with-ogg="${PREFIX}" --enable-shared &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 017337405693
+Step 33/67 : RUN         DIR=/tmp/theora &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO http://downloads.xiph.org/releases/theora/libtheora-${THEORA_VERSION}.tar.gz &&         echo ${THEORA_SHA256SUM} | sha256sum --check &&         tar -zx --strip-components=1 -f libtheora-${THEORA_VERSION}.tar.gz &&         ./configure --prefix="${PREFIX}" --with-ogg="${PREFIX}" --enable-shared &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> a46af4fe05cf
+Step 34/67 : RUN         DIR=/tmp/vpx &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sL https://codeload.github.com/webmproject/libvpx/tar.gz/v${VPX_VERSION} |         tar -zx --strip-components=1 &&         ./configure --prefix="${PREFIX}" --enable-vp8 --enable-vp9 --enable-vp9-highbitdepth --enable-pic --enable-shared         --disable-debug --disable-examples --disable-docs --disable-install-bins  &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> b3b8bed95097
+Step 35/67 : RUN         DIR=/tmp/vebp &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sL https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-${WEBP_VERSION}.tar.gz |         tar -zx --strip-components=1 &&         ./configure --prefix="${PREFIX}" --enable-shared  &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 83c004195f34
+Step 36/67 : RUN         DIR=/tmp/lame &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sL https://sourceforge.net/projects/lame/files/lame/${LAME_VERSION}/lame-${LAME_VERSION}.tar.gz/download |         tar -zx --strip-components=1 &&         ./configure --prefix="${PREFIX}" --bindir="${PREFIX}/bin" --enable-shared --enable-nasm --disable-frontend &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 84fdc595c9b3
+Step 37/67 : RUN         DIR=/tmp/xvid &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO http://downloads.xvid.org/downloads/xvidcore-${XVID_VERSION}.tar.gz &&         echo ${XVID_SHA256SUM} | sha256sum --check &&         tar -zx -f xvidcore-${XVID_VERSION}.tar.gz &&         cd xvidcore/build/generic &&         ./configure --prefix="${PREFIX}" --bindir="${PREFIX}/bin" &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> cdc9c03b7057
+Step 38/67 : RUN         DIR=/tmp/fdk-aac &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sL https://github.com/mstorsjo/fdk-aac/archive/v${FDKAAC_VERSION}.tar.gz |         tar -zx --strip-components=1 &&         autoreconf -fiv &&         ./configure --prefix="${PREFIX}" --enable-shared --datadir="${DIR}" &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 894bf5150312
+Step 39/67 : RUN         DIR=/tmp/openjpeg &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sL https://github.com/uclouvain/openjpeg/archive/v${OPENJPEG_VERSION}.tar.gz |         tar -zx --strip-components=1 &&         cmake -DBUILD_THIRDPARTY:BOOL=ON -DCMAKE_INSTALL_PREFIX="${PREFIX}" . &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> faa42ed87cd5
+Step 40/67 : RUN          DIR=/tmp/freetype &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://download.savannah.gnu.org/releases/freetype/freetype-${FREETYPE_VERSION}.tar.gz &&         echo ${FREETYPE_SHA256SUM} | sha256sum --check &&         tar -zx --strip-components=1 -f freetype-${FREETYPE_VERSION}.tar.gz &&         ./configure --prefix="${PREFIX}" --disable-static --enable-shared &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 45a697988cfc
+Step 41/67 : RUN          DIR=/tmp/vid.stab &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://github.com/georgmartius/vid.stab/archive/v${LIBVIDSTAB_VERSION}.tar.gz &&         echo ${LIBVIDSTAB_SHA256SUM} | sha256sum --check &&          tar -zx --strip-components=1 -f v${LIBVIDSTAB_VERSION}.tar.gz &&         cmake -DCMAKE_INSTALL_PREFIX="${PREFIX}" . &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 274fe0c6ed76
+Step 42/67 : RUN          DIR=/tmp/fribidi &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://github.com/fribidi/fribidi/archive/${FRIBIDI_VERSION}.tar.gz &&         echo ${FRIBIDI_SHA256SUM} | sha256sum --check &&         tar -zx --strip-components=1 -f ${FRIBIDI_VERSION}.tar.gz &&         sed -i 's/^SUBDIRS =.*/SUBDIRS=gen.tab charset lib bin/' Makefile.am &&         ./bootstrap --no-config --auto &&         ./configure --prefix="${PREFIX}" --disable-static --enable-shared &&         make -j1 &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 017c1dac3953
+Step 43/67 : RUN          DIR=/tmp/fontconfig &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://www.freedesktop.org/software/fontconfig/release/fontconfig-${FONTCONFIG_VERSION}.tar.bz2 &&         tar -jx --strip-components=1 -f fontconfig-${FONTCONFIG_VERSION}.tar.bz2 &&         ./configure --prefix="${PREFIX}" --disable-static --enable-shared &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> b5fea7e47270
+Step 44/67 : RUN          DIR=/tmp/libass &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://github.com/libass/libass/archive/${LIBASS_VERSION}.tar.gz &&         echo ${LIBASS_SHA256SUM} | sha256sum --check &&         tar -zx --strip-components=1 -f ${LIBASS_VERSION}.tar.gz &&         ./autogen.sh &&         ./configure --prefix="${PREFIX}" --disable-static --enable-shared &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> fd3b2c28c8b8
+Step 45/67 : RUN         DIR=/tmp/kvazaar &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://github.com/ultravideo/kvazaar/archive/v${KVAZAAR_VERSION}.tar.gz &&         tar -zx --strip-components=1 -f v${KVAZAAR_VERSION}.tar.gz &&         ./autogen.sh &&         ./configure --prefix="${PREFIX}" --disable-static --enable-shared &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 2cb23c340b61
+Step 46/67 : RUN         DIR=/tmp/aom &&         git clone --branch ${AOM_VERSION} --depth 1 https://aomedia.googlesource.com/aom ${DIR} ;         cd ${DIR} ;         rm -rf CMakeCache.txt CMakeFiles ;         mkdir -p ./aom_build ;         cd ./aom_build ;         cmake -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DBUILD_SHARED_LIBS=1 ..;         make ;         make install ;         rm -rf ${DIR}
+ ---> Using cache
+ ---> f8be9545f992
+Step 47/67 : RUN         DIR=/tmp/xorg-macros &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://www.x.org/archive//individual/util/util-macros-${XORG_MACROS_VERSION}.tar.gz &&         tar -zx --strip-components=1 -f util-macros-${XORG_MACROS_VERSION}.tar.gz &&         ./configure --srcdir=${DIR} --prefix="${PREFIX}" &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 3d743edc9c0d
+Step 48/67 : RUN         DIR=/tmp/xproto &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://www.x.org/archive/individual/proto/xproto-${XPROTO_VERSION}.tar.gz &&         tar -zx --strip-components=1 -f xproto-${XPROTO_VERSION}.tar.gz &&         ./configure --srcdir=${DIR} --prefix="${PREFIX}" &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 3afece7a9050
+Step 49/67 : RUN         DIR=/tmp/libXau &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://www.x.org/archive/individual/lib/libXau-${XAU_VERSION}.tar.gz &&         tar -zx --strip-components=1 -f libXau-${XAU_VERSION}.tar.gz &&         ./configure --srcdir=${DIR} --prefix="${PREFIX}" &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 3a9831518919
+Step 50/67 : RUN         DIR=/tmp/libpthread-stubs &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://xcb.freedesktop.org/dist/libpthread-stubs-${LIBPTHREAD_STUBS_VERSION}.tar.gz &&         tar -zx --strip-components=1 -f libpthread-stubs-${LIBPTHREAD_STUBS_VERSION}.tar.gz &&         ./configure --prefix="${PREFIX}" &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 9468f17342ed
+Step 51/67 : RUN         DIR=/tmp/libxcb-proto &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://xcb.freedesktop.org/dist/xcb-proto-${XCBPROTO_VERSION}.tar.gz &&         tar -zx --strip-components=1 -f xcb-proto-${XCBPROTO_VERSION}.tar.gz &&         ACLOCAL_PATH="${PREFIX}/share/aclocal" ./autogen.sh &&         ./configure --prefix="${PREFIX}" &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Using cache
+ ---> 37e97cad3877
+Step 52/67 : RUN         DIR=/tmp/libxcb &&         mkdir -p ${DIR} &&         cd ${DIR} &&         curl -sLO https://xcb.freedesktop.org/dist/libxcb-${LIBXCB_VERSION}.tar.gz &&         tar -zx --strip-components=1 -f libxcb-${LIBXCB_VERSION}.tar.gz &&         ACLOCAL_PATH="${PREFIX}/share/aclocal" ./autogen.sh &&         ./configure --prefix="${PREFIX}" --disable-static --enable-shared &&         make &&         make install &&         rm -rf ${DIR}
+ ---> Running in 617dbc587aa0
+[91mautoreconf: Entering directory `.'
+[0m[91mautoreconf: configure.ac: not using Gettext
+[0m[91mautoreconf: running: aclocal -I m4
+[0m[91mautoreconf: configure.ac: tracing
+[0m[91mautoreconf: running: libtoolize --copy
+[0m[91mautoreconf: running: /usr/bin/autoconf
+[0m[91mautoreconf: running: /usr/bin/autoheader
+[0m[91mautoreconf: running: automake --add-missing --copy --no-force
+[0m[91mautoreconf: Leaving directory `.'
+[0mchecking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for a thread-safe mkdir -p... /bin/mkdir -p
+checking for gawk... no
+checking for mawk... mawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking for a Python interpreter with version >= 2.6... python
+checking for python... /usr/local/bin/python
+checking for python version... 3.9
+checking for python platform... linux
+checking for python script directory... ${prefix}/lib/python3.9/site-packages
+checking for python extension module directory... ${exec_prefix}/lib/python3.9/site-packages
+checking whether make supports the include directive... yes (GNU style)
+checking for gcc... gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to accept ISO C89... none needed
+checking whether gcc understands -c and -o together... yes
+checking dependency style of gcc... gcc3
+checking how to run the C preprocessor... gcc -E
+checking for grep that handles long lines and -e... /bin/grep
+checking for egrep... /bin/grep -E
+checking for ANSI C header files... yes
+checking for sys/types.h... yes
+checking for sys/stat.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for memory.h... yes
+checking for strings.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for unistd.h... yes
+checking minix/config.h usability... no
+checking minix/config.h presence... no
+checking for minix/config.h... no
+checking whether it is safe to define __EXTENSIONS__... yes
+checking build system type... x86_64-pc-linux-gnu
+checking host system type... x86_64-pc-linux-gnu
+checking how to print strings... printf
+checking for a sed that does not truncate output... /bin/sed
+checking for fgrep... /bin/grep -F
+checking for ld used by gcc... /usr/bin/ld
+checking if the linker (/usr/bin/ld) is GNU ld... yes
+checking for BSD- or MS-compatible name lister (nm)... /usr/bin/nm -B
+checking the name lister (/usr/bin/nm -B) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 1572864
+checking how to convert x86_64-pc-linux-gnu file names to x86_64-pc-linux-gnu format... func_convert_file_noop
+checking how to convert x86_64-pc-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for /usr/bin/ld option to reload object files... -r
+checking for objdump... objdump
+checking how to recognize dependent libraries... pass_all
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for ar... ar
+checking for archiver @FILE support... @
+checking for strip... strip
+checking for ranlib... ranlib
+checking command to parse /usr/bin/nm -B output from gcc object... ok
+checking for sysroot... no
+checking for a working dd... /bin/dd
+checking how to truncate binary pipes... /bin/dd bs=4096 count=1
+checking for mt... no
+checking if : is a manifest tool... no
+checking for dlfcn.h... yes
+checking for objdir... .libs
+checking if gcc supports -fno-rtti -fno-exceptions... no
+checking for gcc option to produce PIC... -fPIC -DPIC
+checking if gcc PIC flag -fPIC -DPIC works... yes
+checking if gcc static flag -static works... yes
+checking if gcc supports -c -o file.o... yes
+checking if gcc supports -c -o file.o... (cached) yes
+checking whether the gcc linker (/usr/bin/ld -m elf_x86_64) supports shared libraries... yes
+checking whether -lc should be explicitly linked in... no
+checking dynamic linker characteristics... GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... yes
+checking whether to build static libraries... yes
+checking for gcc option to accept ISO C99... none needed
+checking whether __clang__ is declared... no
+checking whether __INTEL_COMPILER is declared... no
+checking whether __SUNPRO_C is declared... no
+checking for pkg-config... /usr/bin/pkg-config
+checking pkg-config is at least version 0.9.0... yes
+checking if gcc supports -Werror=unknown-warning-option... no
+checking if gcc supports -Werror=unused-command-line-argument... no
+checking if gcc supports -Wall... yes
+checking if gcc supports -Wpointer-arith... yes
+checking if gcc supports -Wmissing-declarations... yes
+checking if gcc supports -Wformat=2... yes
+checking if gcc supports -Wstrict-prototypes... yes
+checking if gcc supports -Wmissing-prototypes... yes
+checking if gcc supports -Wnested-externs... yes
+checking if gcc supports -Wbad-function-cast... yes
+checking if gcc supports -Wold-style-definition... yes
+checking if gcc supports -Wdeclaration-after-statement... yes
+checking if gcc supports -Wunused... yes
+checking if gcc supports -Wuninitialized... yes
+checking if gcc supports -Wshadow... yes
+checking if gcc supports -Wmissing-noreturn... yes
+checking if gcc supports -Wmissing-format-attribute... yes
+checking if gcc supports -Wredundant-decls... yes
+checking if gcc supports -Wlogical-op... yes
+checking if gcc supports -Werror=implicit... yes
+checking if gcc supports -Werror=nonnull... yes
+checking if gcc supports -Werror=init-self... yes
+checking if gcc supports -Werror=main... yes
+checking if gcc supports -Werror=missing-braces... yes
+checking if gcc supports -Werror=sequence-point... yes
+checking if gcc supports -Werror=return-type... yes
+checking if gcc supports -Werror=trigraphs... yes
+checking if gcc supports -Werror=array-bounds... yes
+checking if gcc supports -Werror=write-strings... yes
+checking if gcc supports -Werror=address... yes
+checking if gcc supports -Werror=int-to-pointer-cast... yes
+checking if gcc supports -Werror=pointer-to-int-cast... yes
+checking if gcc supports -pedantic... yes
+checking if gcc supports -Werror... yes
+checking if gcc supports -Werror=attributes... yes
+checking whether make supports nested variables... (cached) yes
+checking whether to build developer documentation... yes
+checking for doxygen... [91mconfigure: WARNING: doxygen not found - documentation targets will be skipped
+[0mno
+[91mconfigure: WARNING: dot not found - doxygen targets will be skipped
+[0mchecking for check >= 0.9.4... no
+checking for xcb-proto >= 1.13... yes
+checking for pthread-stubs xau >= 0.99.2... yes
+checking for xdmcp... no
+no
+checking XCBPROTO_XCBINCLUDEDIR... /opt/ffmpeg/share/xcb
+checking XCBPROTO_XCBPYTHONDIR... /opt/ffmpeg/lib/python3.9/site-packages
+checking for ANSI C header files... (cached) yes
+checking for library containing getaddrinfo... none required
+checking for library containing connect... none required
+checking for library containing sendmsg... none required
+checking for struct msghdr.msg_control... yes
+checking for struct sockaddr_un.sun_len... no
+checking tsol/label.h usability... no
+checking tsol/label.h presence... no
+checking for tsol/label.h... no
+checking for is_system_labeled... no
+checking whether IOV_MAX is declared... yes
+checking whether gcc supports symbol visibility... yes
+checking for getaddrinfo... yes
+checking for poll... yes
+checking for launchd... no
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating doc/Makefile
+config.status: creating man/Makefile
+config.status: creating src/Makefile
+config.status: creating tests/Makefile
+config.status: creating xcb.pc
+config.status: creating xcb-composite.pc
+config.status: creating xcb-damage.pc
+config.status: creating xcb-dpms.pc
+config.status: creating xcb-dri2.pc
+config.status: creating xcb-dri3.pc
+config.status: creating xcb-ge.pc
+config.status: creating xcb-glx.pc
+config.status: creating xcb-present.pc
+config.status: creating xcb-randr.pc
+config.status: creating xcb-record.pc
+config.status: creating xcb-render.pc
+config.status: creating xcb-res.pc
+config.status: creating xcb-screensaver.pc
+config.status: creating xcb-shape.pc
+config.status: creating xcb-shm.pc
+config.status: creating xcb-sync.pc
+config.status: creating xcb-xevie.pc
+config.status: creating xcb-xf86dri.pc
+config.status: creating xcb-xfixes.pc
+config.status: creating xcb-xinerama.pc
+config.status: creating xcb-xinput.pc
+config.status: creating xcb-xkb.pc
+config.status: creating xcb-xprint.pc
+config.status: creating xcb-xselinux.pc
+config.status: creating xcb-xtest.pc
+config.status: creating xcb-xv.pc
+config.status: creating xcb-xvmc.pc
+config.status: creating doc/xcb.doxygen
+config.status: creating src/config.h
+config.status: executing depfiles commands
+config.status: executing libtool commands
+
+  Package: libxcb 1.13.1
+
+  Configuration
+    XDM support.........: no
+    sendmsg fd passing..: yes
+    Build unit tests....: no
+      with html results.: no
+    XCB buffer size.....: 16384
+
+  X11 extensions
+    Composite...........: yes
+    Damage..............: yes
+    Dpms................: yes
+    Dri2................: yes
+    Dri3................: yes
+    GenericEvent........: no
+    Glx.................: yes
+    Randr...............: yes
+    Record..............: yes
+    Render..............: yes
+    Resource............: yes
+    Screensaver.........: yes
+    selinux.............: no
+    Shape...............: yes
+    Shm.................: yes
+    Sync................: yes
+    Xevie...............: no
+    Xfixes..............: yes
+    Xfree86-dri.........: yes
+    xinerama............: yes
+    xinput..............: yes
+    xkb.................: yes
+    xprint..............: no
+    xtest...............: yes
+    xv..................: yes
+    xvmc................: yes
+
+  Used CFLAGS:
+    CPPFLAGS............: 
+    CFLAGS..............: -g -O2
+
+  Installation:
+    Prefix..............: /usr/local
+
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for a thread-safe mkdir -p... /bin/mkdir -p
+checking for gawk... no
+checking for mawk... mawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking for a Python interpreter with version >= 2.6... python
+checking for python... /usr/local/bin/python
+checking for python version... 3.9
+checking for python platform... linux
+checking for python script directory... ${prefix}/lib/python3.9/site-packages
+checking for python extension module directory... ${exec_prefix}/lib/python3.9/site-packages
+checking whether make supports the include directive... yes (GNU style)
+checking for gcc... gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to accept ISO C89... none needed
+checking whether gcc understands -c and -o together... yes
+checking dependency style of gcc... gcc3
+checking how to run the C preprocessor... gcc -E
+checking for grep that handles long lines and -e... /bin/grep
+checking for egrep... /bin/grep -E
+checking for ANSI C header files... yes
+checking for sys/types.h... yes
+checking for sys/stat.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for memory.h... yes
+checking for strings.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for unistd.h... yes
+checking minix/config.h usability... no
+checking minix/config.h presence... no
+checking for minix/config.h... no
+checking whether it is safe to define __EXTENSIONS__... yes
+checking build system type... x86_64-pc-linux-gnu
+checking host system type... x86_64-pc-linux-gnu
+checking how to print strings... printf
+checking for a sed that does not truncate output... /bin/sed
+checking for fgrep... /bin/grep -F
+checking for ld used by gcc... /usr/bin/ld
+checking if the linker (/usr/bin/ld) is GNU ld... yes
+checking for BSD- or MS-compatible name lister (nm)... /usr/bin/nm -B
+checking the name lister (/usr/bin/nm -B) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 1572864
+checking how to convert x86_64-pc-linux-gnu file names to x86_64-pc-linux-gnu format... func_convert_file_noop
+checking how to convert x86_64-pc-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for /usr/bin/ld option to reload object files... -r
+checking for objdump... objdump
+checking how to recognize dependent libraries... pass_all
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for ar... ar
+checking for archiver @FILE support... @
+checking for strip... strip
+checking for ranlib... ranlib
+checking command to parse /usr/bin/nm -B output from gcc object... ok
+checking for sysroot... no
+checking for a working dd... /bin/dd
+checking how to truncate binary pipes... /bin/dd bs=4096 count=1
+checking for mt... no
+checking if : is a manifest tool... no
+checking for dlfcn.h... yes
+checking for objdir... .libs
+checking if gcc supports -fno-rtti -fno-exceptions... no
+checking for gcc option to produce PIC... -fPIC -DPIC
+checking if gcc PIC flag -fPIC -DPIC works... yes
+checking if gcc static flag -static works... yes
+checking if gcc supports -c -o file.o... yes
+checking if gcc supports -c -o file.o... (cached) yes
+checking whether the gcc linker (/usr/bin/ld -m elf_x86_64) supports shared libraries... yes
+checking whether -lc should be explicitly linked in... no
+checking dynamic linker characteristics... GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... yes
+checking whether to build static libraries... no
+checking for gcc option to accept ISO C99... none needed
+checking whether __clang__ is declared... no
+checking whether __INTEL_COMPILER is declared... no
+checking whether __SUNPRO_C is declared... no
+checking for pkg-config... /usr/bin/pkg-config
+checking pkg-config is at least version 0.9.0... yes
+checking if gcc supports -Werror=unknown-warning-option... no
+checking if gcc supports -Werror=unused-command-line-argument... no
+checking if gcc supports -Wall... yes
+checking if gcc supports -Wpointer-arith... yes
+checking if gcc supports -Wmissing-declarations... yes
+checking if gcc supports -Wformat=2... yes
+checking if gcc supports -Wstrict-prototypes... yes
+checking if gcc supports -Wmissing-prototypes... yes
+checking if gcc supports -Wnested-externs... yes
+checking if gcc supports -Wbad-function-cast... yes
+checking if gcc supports -Wold-style-definition... yes
+checking if gcc supports -Wdeclaration-after-statement... yes
+checking if gcc supports -Wunused... yes
+checking if gcc supports -Wuninitialized... yes
+checking if gcc supports -Wshadow... yes
+checking if gcc supports -Wmissing-noreturn... yes
+checking if gcc supports -Wmissing-format-attribute... yes
+checking if gcc supports -Wredundant-decls... yes
+checking if gcc supports -Wlogical-op... yes
+checking if gcc supports -Werror=implicit... yes
+checking if gcc supports -Werror=nonnull... yes
+checking if gcc supports -Werror=init-self... yes
+checking if gcc supports -Werror=main... yes
+checking if gcc supports -Werror=missing-braces... yes
+checking if gcc supports -Werror=sequence-point... yes
+checking if gcc supports -Werror=return-type... yes
+checking if gcc supports -Werror=trigraphs... yes
+checking if gcc supports -Werror=array-bounds... yes
+checking if gcc supports -Werror=write-strings... yes
+checking if gcc supports -Werror=address... yes
+checking if gcc supports -Werror=int-to-pointer-cast... yes
+checking if gcc supports -Werror=pointer-to-int-cast... yes
+checking if gcc supports -pedantic... yes
+checking if gcc supports -Werror... yes
+checking if gcc supports -Werror=attributes... yes
+checking whether make supports nested variables... (cached) yes
+checking whether to build developer documentation... yes
+checking for doxygen... [91mconfigure: WARNING: doxygen not found - documentation targets will be skipped
+[0mno
+[91mconfigure: WARNING: dot not found - doxygen targets will be skipped
+[0mchecking for check >= 0.9.4... no
+checking for xcb-proto >= 1.13... yes
+checking for pthread-stubs xau >= 0.99.2... yes
+checking for xdmcp... no
+no
+checking XCBPROTO_XCBINCLUDEDIR... /opt/ffmpeg/share/xcb
+checking XCBPROTO_XCBPYTHONDIR... /opt/ffmpeg/lib/python3.9/site-packages
+checking for ANSI C header files... (cached) yes
+checking for library containing getaddrinfo... none required
+checking for library containing connect... none required
+checking for library containing sendmsg... none required
+checking for struct msghdr.msg_control... yes
+checking for struct sockaddr_un.sun_len... no
+checking tsol/label.h usability... no
+checking tsol/label.h presence... no
+checking for tsol/label.h... no
+checking for is_system_labeled... no
+checking whether IOV_MAX is declared... yes
+checking whether gcc supports symbol visibility... yes
+checking for getaddrinfo... yes
+checking for poll... yes
+checking for launchd... no
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating doc/Makefile
+config.status: creating man/Makefile
+config.status: creating src/Makefile
+config.status: creating tests/Makefile
+config.status: creating xcb.pc
+config.status: creating xcb-composite.pc
+config.status: creating xcb-damage.pc
+config.status: creating xcb-dpms.pc
+config.status: creating xcb-dri2.pc
+config.status: creating xcb-dri3.pc
+config.status: creating xcb-ge.pc
+config.status: creating xcb-glx.pc
+config.status: creating xcb-present.pc
+config.status: creating xcb-randr.pc
+config.status: creating xcb-record.pc
+config.status: creating xcb-render.pc
+config.status: creating xcb-res.pc
+config.status: creating xcb-screensaver.pc
+config.status: creating xcb-shape.pc
+config.status: creating xcb-shm.pc
+config.status: creating xcb-sync.pc
+config.status: creating xcb-xevie.pc
+config.status: creating xcb-xf86dri.pc
+config.status: creating xcb-xfixes.pc
+config.status: creating xcb-xinerama.pc
+config.status: creating xcb-xinput.pc
+config.status: creating xcb-xkb.pc
+config.status: creating xcb-xprint.pc
+config.status: creating xcb-xselinux.pc
+config.status: creating xcb-xtest.pc
+config.status: creating xcb-xv.pc
+config.status: creating xcb-xvmc.pc
+config.status: creating doc/xcb.doxygen
+config.status: creating src/config.h
+config.status: src/config.h is unchanged
+config.status: executing depfiles commands
+config.status: executing libtool commands
+
+  Package: libxcb 1.13.1
+
+  Configuration
+    XDM support.........: no
+    sendmsg fd passing..: yes
+    Build unit tests....: no
+      with html results.: no
+    XCB buffer size.....: 16384
+
+  X11 extensions
+    Composite...........: yes
+    Damage..............: yes
+    Dpms................: yes
+    Dri2................: yes
+    Dri3................: yes
+    GenericEvent........: no
+    Glx.................: yes
+    Randr...............: yes
+    Record..............: yes
+    Render..............: yes
+    Resource............: yes
+    Screensaver.........: yes
+    selinux.............: no
+    Shape...............: yes
+    Shm.................: yes
+    Sync................: yes
+    Xevie...............: no
+    Xfixes..............: yes
+    Xfree86-dri.........: yes
+    xinerama............: yes
+    xinput..............: yes
+    xkb.................: yes
+    xprint..............: no
+    xtest...............: yes
+    xv..................: yes
+    xvmc................: yes
+
+  Used CFLAGS:
+    CPPFLAGS............: 
+    CFLAGS..............: -g -O2
+
+  Installation:
+    Prefix..............: /opt/ffmpeg
+
+Making all in src
+make[1]: Entering directory '/tmp/libxcb/src'
+  GEN      xproto.c
+  GEN      bigreq.c
+
+Failed to load the xcbgen Python package!
+Make sure that xcb/proto installed it on your Python path.
+If not, you will need to create a .pth file or define $PYTHONPATH
+to extend the path.
+Refer to the README file in xcb/proto for more info.
+
+[91mTraceback (most recent call last):
+  File "/tmp/libxcb/src/./c_client.py", line 3338, in <module>
+[0m
+Failed to load the xcbgen Python package!
+Make sure that xcb/proto installed it on your Python path.
+If not, you will need to create a .pth file or define $PYTHONPATH
+to extend the path.
+Refer to the README file in xcb/proto for more info.
+
+[91mTraceback (most recent call last):
+  File "/tmp/libxcb/src/./c_client.py", line 3338, in <module>
+[0m[91m    from xcbgen.state import Module
+[0m[91m  File "/opt/ffmpeg/lib/python3.9/site-packages/xcbgen/state.py", line 7, in <module>
+[0m[91m    from xcbgen import matcher
+[0m[91m  File "/opt/ffmpeg/lib/python3.9/site-packages/xcbgen/matcher.py", line 12, in <module>
+[0m[91m    from xcbgen.xtypes import *
+  File "/opt/ffmpeg/lib/python3.9/site-packages/xcbgen/xtypes.py", line 5, in <module>
+[0m[91m    from xcbgen.align import Alignment, AlignmentLog
+  File "/opt/ffmpeg/lib/python3.9/site-packages/xcbgen/align.py", line 5, in <module>
+[0m[91m    from fractions import gcd
+ImportError: cannot import name 'gcd' from 'fractions' (/usr/local/lib/python3.9/fractions.py)
+[0m[91m    from xcbgen.state import Module
+  File "/opt/ffmpeg/lib/python3.9/site-packages/xcbgen/state.py", line 7, in <module>
+[0m[91m    from xcbgen import matcher
+  File "/opt/ffmpeg/lib/python3.9/site-packages/xcbgen/matcher.py", line 12, in <module>
+    from xcbgen.xtypes import *
+  File "/opt/ffmpeg/lib/python3.9/site-packages/xcbgen/xtypes.py", line 5, in <module>
+[0m[91m    from xcbgen.align import Alignment, AlignmentLog
+  File "/opt/ffmpeg/lib/python3.9/site-packages/xcbgen/align.py", line 5, in <module>
+[0m[91m    from fractions import gcd
+ImportError: cannot import name 'gcd' from 'fractions' (/usr/local/lib/python3.9/fractions.py)
+[0m[91mmake[1]: *** [Makefile:1408: xproto.c] Error 1
+make[1]: *** Waiting for unfinished jobs....
+[0mmake[1]: Leaving directory '/tmp/libxcb/src'
+[91mmake[1]: *** [Makefile:1408: bigreq.c] Error 1
+[0m[91mmake: *** [Makefile:795: all-recursive] Error 1
+[0m
