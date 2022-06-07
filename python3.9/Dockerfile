@@ -519,19 +519,21 @@ RUN  \
 # get ffmpeg-gl-transition modifications
 # this pulls from the original master for standalone use
 # but you could modify to copy from your clone/repository
-RUN git clone https://github.com/transitive-bullshit/ffmpeg-gl-transition.git
+RUN \
+        cd /tmp && \
+        git clone https://github.com/transitive-bullshit/ffmpeg-gl-transition.git
 
 # enable contrib/non-free
 RUN sed -E -e 's/\s+main\s?$/ main contrib non-free /' /etc/apt/sources.list >/etc/apt/sources.list.new && mv /etc/apt/sources.list.new /etc/apt/sources.list
 
 # dependencies needed for ffmpeg compile
 RUN apt-get update && apt-get -y install gcc g++ make xorg-dev pkg-config \
-                       libglew2.0 libglew-dev libglfw3-dev \
+                       libglew2.1 libglew-dev libglfw3-dev \
                        nasm yasm libx264-dev libx265-dev libvpx-dev libglu1-mesa-dev \
                        libmp3lame-dev libopus-dev libfdk-aac-dev
 
 # disable EGL
-RUN grep -v "define GL_TRANSITION_USING_EGL" /build/ffmpeg-gl-transition/vf_gltransition.c > ffmpeg/libavfilter/vf_gltransition.c
+RUN grep -v "define GL_TRANSITION_USING_EGL" /tmp/ffmpeg-gl-transition/vf_gltransition.c > /tmp/ffmpeg/libavfilter/vf_gltransition.c
 # if you want to try EGL comment the above line and uncomment the below line
 # also replace -lglfw with -lEGL in the extra_libs section of the ffmpeg
 # configure farther down this file
@@ -539,7 +541,7 @@ RUN grep -v "define GL_TRANSITION_USING_EGL" /build/ffmpeg-gl-transition/vf_gltr
 #RUN cp /build/ffmpeg-gl-transition/vf_gltransition.c ffmpeg/libavfilter/vf_gltransition.c
 
 # apply patch
-RUN (cd ffmpeg; git apply /build/ffmpeg-gl-transition/ffmpeg.diff)
+RUN (cd /tmp/ffmpeg; git apply /tmp/workdir/ffmpeg-gl-transition/ffmpeg.diff)
 
 
 
