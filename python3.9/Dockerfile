@@ -541,7 +541,7 @@ RUN grep -v "define GL_TRANSITION_USING_EGL" /tmp/ffmpeg-gl-transition/vf_gltran
 #RUN cp /build/ffmpeg-gl-transition/vf_gltransition.c ffmpeg/libavfilter/vf_gltransition.c
 
 # apply patch
-RUN (cd /tmp/ffmpeg; git apply /tmp/workdir/ffmpeg-gl-transition/ffmpeg.diff)
+RUN (cd /tmp/ffmpeg; git apply /tmp/ffmpeg-gl-transition/ffmpeg.diff)
 
 
 
