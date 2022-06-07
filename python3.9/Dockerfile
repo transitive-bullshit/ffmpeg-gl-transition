@@ -516,6 +516,27 @@ RUN  \
         make ;  make install
 
 
+# get ffmpeg-gl-transition modifications
+# this pulls from the original master for standalone use
+# but you could modify to copy from your clone/repository
+RUN git clone https://github.com/transitive-bullshit/ffmpeg-gl-transition.git
+
+# dependencies needed for ffmpeg compile
+RUN apt-get -y install gcc g++ make xorg-dev pkg-config \
+                       libglew2.0 libglew-dev libglfw3-dev \
+                       nasm yasm libx264-dev libx265-dev libvpx-dev libglu1-mesa-dev \
+                       libmp3lame-dev libopus-dev libfdk-aac-dev
+
+# disable EGL
+RUN grep -v "define GL_TRANSITION_USING_EGL" /build/ffmpeg-gl-transition/vf_gltransition.c > ffmpeg/libavfilter/vf_gltransition.c
+# if you want to try EGL comment the above line and uncomment the below line
+# also replace -lglfw with -lEGL in the extra_libs section of the ffmpeg
+# configure farther down this file
+# NOTE: could not get EGL to work in container!
+#RUN cp /build/ffmpeg-gl-transition/vf_gltransition.c ffmpeg/libavfilter/vf_gltransition.c
+
+# apply patch
+RUN (cd ffmpeg; git apply /build/ffmpeg-gl-transition/ffmpeg.diff)
 
 
 
@@ -559,13 +580,16 @@ RUN  \
         --enable-shared \
         --enable-small \
         --enable-version3 \
+        # for gltransition
+        -enable-gpl --enable-opengl --enable-filter=gltransition --extra-libs='-lGLEW -lglfw -ldl' \
+        # end
         --extra-cflags="-I${PREFIX}/include" \
         --extra-ldflags="-L${PREFIX}/lib" \
         --extra-libs=-ldl \
         --extra-libs=-lpthread \
         --prefix="${PREFIX}" && \
         make clean && \
-        make && \
+        make -j && \
         make install && \
         make tools/zmqsend && cp tools/zmqsend ${PREFIX}/bin/ && \
         make distclean && \
@@ -591,6 +615,9 @@ LABEL       org.opencontainers.image.authors="julien@rottenberg.info" \
             org.opencontainers.image.source=https://github.com/jrottenberg/ffmpeg
 
 ENV         LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64
+
+# needed for running it
+RUN apt-get -y install xvfb
 
 CMD         ["--help"]
 ENTRYPOINT  ["ffmpeg"]
