@@ -17,41 +17,41 @@ RUN     apt-get -yqq update && \
 FROM base as build
 
 ENV         FFMPEG_VERSION=4.4.2 \
-    AOM_VERSION=v1.0.0 \
-    CHROMAPRINT_VERSION=1.5.0 \
-    FDKAAC_VERSION=0.1.5 \
-    FONTCONFIG_VERSION=2.12.4 \
-    FREETYPE_VERSION=2.10.4 \
-    FRIBIDI_VERSION=0.19.7 \
-    KVAZAAR_VERSION=2.0.0 \
-    LAME_VERSION=3.100 \
-    LIBASS_VERSION=0.13.7 \
-    LIBPTHREAD_STUBS_VERSION=0.4 \
-    LIBVIDSTAB_VERSION=1.1.0 \
-    LIBXCB_VERSION=1.15 \
-    XCBPROTO_VERSION=1.15 \
-    OGG_VERSION=1.3.2 \
-    OPENCOREAMR_VERSION=0.1.5 \
-    OPUS_VERSION=1.2 \
-    OPENJPEG_VERSION=2.1.2 \
-    THEORA_VERSION=1.1.1 \
-    VORBIS_VERSION=1.3.5 \
-    VPX_VERSION=1.8.0 \
-    WEBP_VERSION=1.0.2 \
-    X264_VERSION=20170226-2245-stable \
-    X265_VERSION=3.4 \
-    XAU_VERSION=1.0.9 \
-    XORG_MACROS_VERSION=1.19.2 \
-    XPROTO_VERSION=7.0.31 \
-    XVID_VERSION=1.3.4 \
-    LIBXML2_VERSION=2.9.12 \
-    LIBBLURAY_VERSION=1.1.2 \
-    LIBZMQ_VERSION=4.3.2 \
-    LIBSRT_VERSION=1.4.1 \
-    LIBARIBB24_VERSION=1.0.3 \
-    LIBPNG_VERSION=1.6.9 \
-    LIBVMAF_VERSION=2.1.1 \
-    SRC=/usr/local
+        AOM_VERSION=v1.0.0 \
+        CHROMAPRINT_VERSION=1.5.0 \
+        FDKAAC_VERSION=0.1.5 \
+        FONTCONFIG_VERSION=2.12.4 \
+        FREETYPE_VERSION=2.10.4 \
+        FRIBIDI_VERSION=0.19.7 \
+        KVAZAAR_VERSION=2.0.0 \
+        LAME_VERSION=3.100 \
+        LIBASS_VERSION=0.13.7 \
+        LIBPTHREAD_STUBS_VERSION=0.4 \
+        LIBVIDSTAB_VERSION=1.1.0 \
+        LIBXCB_VERSION=1.15 \
+        XCBPROTO_VERSION=1.15 \
+        OGG_VERSION=1.3.2 \
+        OPENCOREAMR_VERSION=0.1.5 \
+        OPUS_VERSION=1.2 \
+        OPENJPEG_VERSION=2.1.2 \
+        THEORA_VERSION=1.1.1 \
+        VORBIS_VERSION=1.3.5 \
+        VPX_VERSION=1.8.0 \
+        WEBP_VERSION=1.0.2 \
+        X264_VERSION=20170226-2245-stable \
+        X265_VERSION=3.4 \
+        XAU_VERSION=1.0.9 \
+        XORG_MACROS_VERSION=1.19.2 \
+        XPROTO_VERSION=7.0.31 \
+        XVID_VERSION=1.3.4 \
+        LIBXML2_VERSION=2.9.12 \
+        LIBBLURAY_VERSION=1.1.2 \
+        LIBZMQ_VERSION=4.3.2 \
+        LIBSRT_VERSION=1.4.1 \
+        LIBARIBB24_VERSION=1.0.3 \
+        LIBPNG_VERSION=1.6.9 \
+        LIBVMAF_VERSION=2.1.1 \
+        SRC=/usr/local
 
 ARG         FREETYPE_SHA256SUM="5eab795ebb23ac77001cfb68b7d4d50b5d6c7469247b0b01b2c953269f658dac freetype-2.10.4.tar.gz"
 ARG         FRIBIDI_SHA256SUM="3fc96fa9473bd31dcb5500bdf1aa78b337ba13eb8c301e7c28923fea982453a8 0.19.7.tar.gz"
@@ -78,25 +78,25 @@ ARG         LD_LIBRARY_PATH="/opt/ffmpeg/lib:/opt/ffmpeg/lib64"
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN      buildDeps="autoconf \
-                    automake \
-                    cmake \
-                    curl \
-                    bzip2 \
-                    libexpat1-dev \
-                    g++ \
-                    gcc \
-                    git \
-                    gperf \
-                    libtool \
-                    make \
-                    meson \
-                    nasm \
-                    perl \
-                    pkg-config \
-                    python \
-                    libssl-dev \
-                    yasm \
-                    zlib1g-dev" && \
+        automake \
+        cmake \
+        curl \
+        bzip2 \
+        libexpat1-dev \
+        g++ \
+        gcc \
+        git \
+        gperf \
+        libtool \
+        make \
+        meson \
+        nasm \
+        perl \
+        pkg-config \
+        python \
+        libssl-dev \
+        yasm \
+        zlib1g-dev" && \
         apt-get -yqq update && \
         apt-get install -yq --no-install-recommends ${buildDeps}
 ## libvmaf https://github.com/Netflix/vmaf
@@ -528,9 +528,9 @@ RUN sed -E -e 's/\s+main\s?$/ main contrib non-free /' /etc/apt/sources.list >/e
 
 # dependencies needed for ffmpeg compile
 RUN apt-get update && apt-get -y install gcc g++ make xorg-dev pkg-config \
-                       libglew2.1 libglew-dev libglfw3-dev \
-                       nasm yasm libx264-dev libx265-dev libvpx-dev libglu1-mesa-dev \
-                       libmp3lame-dev libopus-dev libfdk-aac-dev
+        libglew2.1 libglew-dev libglfw3-dev \
+        nasm yasm libx264-dev libx265-dev libvpx-dev libglu1-mesa-dev \
+        libmp3lame-dev libopus-dev libfdk-aac-dev
 
 # disable EGL
 RUN grep -v "define GL_TRANSITION_USING_EGL" /tmp/ffmpeg-gl-transition/vf_gltransition.c > /tmp/ffmpeg/libavfilter/vf_gltransition.c
@@ -612,22 +612,12 @@ RUN \
         cp -r ${PREFIX}/include/libav* ${PREFIX}/include/libpostproc ${PREFIX}/include/libsw* /usr/local/include && \
         mkdir -p /usr/local/lib/pkgconfig && \
         for pc in ${PREFIX}/lib/pkgconfig/libav*.pc ${PREFIX}/lib/pkgconfig/libpostproc.pc ${PREFIX}/lib/pkgconfig/libsw*.pc; do \
-          sed "s:${PREFIX}:/usr/local:g" <"$pc" >/usr/local/lib/pkgconfig/"${pc##*/}"; \
+        sed "s:${PREFIX}:/usr/local:g" <"$pc" >/usr/local/lib/pkgconfig/"${pc##*/}"; \
         done
-
-FROM        base AS release
-LABEL       org.opencontainers.image.authors="julien@rottenberg.info" \
-            org.opencontainers.image.source=https://github.com/jrottenberg/ffmpeg
-
-ENV         LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64
 
 # needed for running it
 RUN apt-get -y install xvfb
 
-CMD         ["--help"]
-ENTRYPOINT  ["ffmpeg"]
-
-COPY --from=build /usr/local /usr/local/
-
-# Let's make sure the app built correctly
-# Convenient to verify on https://hub.docker.com/r/jrottenberg/ffmpeg/builds/ console output
+# try the demo
+RUN (cd /tmp/ffmpeg-gl-transition; xvfb-run -s '+iglx -screen 0 1920x1080x24' bash concat.sh )
+# result would be in out.mp4 in that directory
