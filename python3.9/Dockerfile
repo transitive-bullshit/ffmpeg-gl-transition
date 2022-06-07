@@ -521,8 +521,11 @@ RUN  \
 # but you could modify to copy from your clone/repository
 RUN git clone https://github.com/transitive-bullshit/ffmpeg-gl-transition.git
 
+# enable contrib/non-free
+RUN sed -E -e 's/\s+main\s?$/ main contrib non-free /' /etc/apt/sources.list >/etc/apt/sources.list.new && mv /etc/apt/sources.list.new /etc/apt/sources.list
+
 # dependencies needed for ffmpeg compile
-RUN apt-get -y install gcc g++ make xorg-dev pkg-config \
+RUN apt-get update && apt-get -y install gcc g++ make xorg-dev pkg-config \
                        libglew2.0 libglew-dev libglfw3-dev \
                        nasm yasm libx264-dev libx265-dev libvpx-dev libglu1-mesa-dev \
                        libmp3lame-dev libopus-dev libfdk-aac-dev
