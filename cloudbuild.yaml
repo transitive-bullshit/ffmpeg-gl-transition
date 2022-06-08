@@ -15,3 +15,5 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'asia.gcr.io/$PROJECT_ID/ffmpeg-gl-transition:latest']
   id: 'push-latest'
+options:
+  machineType: E2_HIGHCPU_8
