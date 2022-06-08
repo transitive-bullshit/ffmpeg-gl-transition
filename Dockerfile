@@ -6,7 +6,7 @@
 # https://github.com/jrottenberg/ffmpeg
 
 
-FROM    ubuntu:18.04 AS base
+FROM    ubuntu:22.10 AS base
 
 WORKDIR /tmp/workdir
 
