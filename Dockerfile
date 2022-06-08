@@ -11,7 +11,7 @@ FROM    ubuntu:22.10 AS base
 WORKDIR /tmp/workdir
 
 RUN     apt-get -yqq update && \
-        apt-get install -yq --no-install-recommends ca-certificates expat libgomp1 libxcb-shape0 libxcb-xfixes0 libdrm2 libglew2.0 libglfw3 xvfb && \
+        apt-get install -yq --no-install-recommends ca-certificates expat libgomp1 libxcb-shape0 libxcb-xfixes0 libdrm2 libglew2.1 libglfw3 xvfb && \
         apt-get autoremove -y && \
         apt-get clean -y
 
