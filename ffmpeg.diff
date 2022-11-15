@@ -15,10 +15,10 @@ index 6eac828616..0570c1c2aa 100644
 --- a/libavfilter/allfilters.c
 +++ b/libavfilter/allfilters.c
 @@ -357,6 +357,7 @@ extern AVFilter ff_vf_yadif;
- extern AVFilter ff_vf_zmq;
- extern AVFilter ff_vf_zoompan;
- extern AVFilter ff_vf_zscale;
-+extern AVFilter ff_vf_gltransition;
- 
- extern AVFilter ff_vsrc_allrgb;
- extern AVFilter ff_vsrc_allyuv;
+ extern const AVFilter ff_vf_zmq;
+ extern const AVFilter ff_vf_zoompan;
+ extern const AVFilter ff_vf_zscale;
++extern const AVFilter ff_vf_gltransition;
+
+ extern const AVFilter ff_vsrc_allrgb;
+ extern const AVFilter ff_vsrc_allyuv;
