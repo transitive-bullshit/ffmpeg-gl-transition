@@ -27,14 +27,13 @@
 # include <GLFW/glfw3.h>
 #endif
 
+#include <SOIL.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
 
 #define FROM (0)
 #define TO   (1)
-
-#define PIXEL_FORMAT (GL_RGB)
 
 #ifdef GL_TRANSITION_USING_EGL
 static const EGLint configAttribs[] = {
@@ -99,6 +98,12 @@ typedef struct {
   double duration;
   double offset;
   char *source;
+  char *extra_texture;
+  int alpha;
+
+  //channel info
+  int pix_fmt;
+  int channel_num;
 
   // timestamp of the first frame in the output, in the timebase units
   int64_t first_pts;
@@ -106,6 +111,7 @@ typedef struct {
   // uniforms
   GLuint        from;
   GLuint        to;
+  GLuint        extra_tex;
   GLint         progress;
   GLint         ratio;
   GLint         _fromR;
@@ -133,10 +139,16 @@ static const AVOption gltransition_options[] = {
   { "duration", "transition duration in seconds", OFFSET(duration), AV_OPT_TYPE_DOUBLE, {.dbl=1.0}, 0, DBL_MAX, FLAGS },
   { "offset", "delay before startingtransition in seconds", OFFSET(offset), AV_OPT_TYPE_DOUBLE, {.dbl=0.0}, 0, DBL_MAX, FLAGS },
   { "source", "path to the gl-transition source file (defaults to basic fade)", OFFSET(source), AV_OPT_TYPE_STRING, {.str = NULL}, CHAR_MIN, CHAR_MAX, FLAGS },
+  { "extra_texture", "path to the gl-transition extra_texture file", OFFSET(extra_texture), AV_OPT_TYPE_STRING, {.str = NULL}, CHAR_MIN, CHAR_MAX, FLAGS },
   {NULL}
 };
 
 FRAMESYNC_DEFINE_CLASS(gltransition, GLTransitionContext, fs);
+
+static const enum AVPixelFormat alpha_pix_fmts[] = {
+    AV_PIX_FMT_ARGB, AV_PIX_FMT_ABGR, AV_PIX_FMT_RGBA,
+    AV_PIX_FMT_BGRA, AV_PIX_FMT_NONE
+};
 
 static GLuint build_shader(AVFilterContext *ctx, const GLchar *shader_source, GLenum type)
 {
@@ -242,8 +254,7 @@ static void setup_tex(AVFilterLink *fromLink)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fromLink->w, fromLink->h, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
-
+    glTexImage2D(GL_TEXTURE_2D, 0, c->pix_fmt, fromLink->w, fromLink->h, 0, c->pix_fmt, GL_UNSIGNED_BYTE, NULL);
     glUniform1i(glGetUniformLocation(c->program, "from"), 0);
   }
 
@@ -257,9 +268,33 @@ static void setup_tex(AVFilterLink *fromLink)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fromLink->w, fromLink->h, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, c->pix_fmt, fromLink->w, fromLink->h, 0, c->pix_fmt, GL_UNSIGNED_BYTE, NULL);
 
     glUniform1i(glGetUniformLocation(c->program, "to"), 1);
+  }
+
+  if (c->extra_texture) { // extra_texture
+    int width, height, channels, soilPixFmt;
+    soilPixFmt = SOIL_LOAD_RGB;
+    if (c->alpha) {
+      soilPixFmt = SOIL_LOAD_RGBA;
+    }
+    unsigned char* image = SOIL_load_image(c->extra_texture, &width, &height, &channels, soilPixFmt);
+
+    glGenTextures(1, &c->extra_tex);
+    glActiveTexture(GL_TEXTURE0 + 2);
+    glBindTexture(GL_TEXTURE_2D, c->extra_tex);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, c->pix_fmt, width, height, 0, c->pix_fmt, GL_UNSIGNED_BYTE, image);
+
+    glUniform1i(glGetUniformLocation(c->program, "extra_tex"), 2);
+
+    SOIL_free_image_data(image);
   }
 }
 
@@ -288,6 +323,17 @@ static int setup_gl(AVFilterLink *inLink)
   AVFilterContext *ctx = inLink->dst;
   GLTransitionContext *c = ctx->priv;
 
+  c->alpha = ff_fmt_is_in(inLink->format, alpha_pix_fmts);
+  av_log(ctx, AV_LOG_DEBUG, "c->alpha: %d, inLink->format: %d\n", c->alpha, inLink->format);
+
+  //get alpha info
+  if (c->alpha) {
+    c->pix_fmt = GL_RGBA;
+    c->channel_num = 4;
+  } else {
+    c->pix_fmt = GL_RGB;
+    c->channel_num = 3;
+  }
 
 #ifdef GL_TRANSITION_USING_EGL
   //init EGL
@@ -397,17 +443,17 @@ static AVFrame *apply_transition(FFFrameSync *fs,
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, c->from);
-  glPixelStorei(GL_UNPACK_ROW_LENGTH, fromFrame->linesize[0] / 3);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fromLink->w, fromLink->h, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, fromFrame->data[0]);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, fromFrame->linesize[0] / c->channel_num);
+  glTexImage2D(GL_TEXTURE_2D, 0, c->pix_fmt, fromLink->w, fromLink->h, 0, c->pix_fmt, GL_UNSIGNED_BYTE, fromFrame->data[0]);
 
   glActiveTexture(GL_TEXTURE0 + 1);
   glBindTexture(GL_TEXTURE_2D, c->to);
-  glPixelStorei(GL_UNPACK_ROW_LENGTH, toFrame->linesize[0] / 3);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, toLink->w, toLink->h, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, toFrame->data[0]);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, toFrame->linesize[0] / c->channel_num);
+  glTexImage2D(GL_TEXTURE_2D, 0, c->pix_fmt, toLink->w, toLink->h, 0, c->pix_fmt, GL_UNSIGNED_BYTE, toFrame->data[0]);
 
   glDrawArrays(GL_TRIANGLES, 0, 6);
-  glPixelStorei(GL_PACK_ROW_LENGTH, outFrame->linesize[0] / 3);
-  glReadPixels(0, 0, outLink->w, outLink->h, PIXEL_FORMAT, GL_UNSIGNED_BYTE, (GLvoid *)outFrame->data[0]);
+  glPixelStorei(GL_PACK_ROW_LENGTH, outFrame->linesize[0] / c->channel_num);
+  glReadPixels(0, 0, outLink->w, outLink->h, c->pix_fmt, GL_UNSIGNED_BYTE, (GLvoid *)outFrame->data[0]);
 
   glPixelStorei(GL_PACK_ROW_LENGTH, 0);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
@@ -493,12 +539,19 @@ static av_cold void uninit(AVFilterContext *ctx) {
 
 static int query_formats(AVFilterContext *ctx)
 {
-  static const enum AVPixelFormat formats[] = {
-    AV_PIX_FMT_RGB24,
-    AV_PIX_FMT_NONE
-  };
+    static const enum AVPixelFormat pix_fmts[] = {
+        AV_PIX_FMT_RGB24,    AV_PIX_FMT_BGR24,
+        AV_PIX_FMT_ARGB,     AV_PIX_FMT_ABGR,
+        AV_PIX_FMT_RGBA,     AV_PIX_FMT_BGRA,
+        AV_PIX_FMT_NONE
+    };
+    AVFilterFormats *fmts_list;
 
-  return ff_set_common_formats(ctx, ff_make_format_list(formats));
+    fmts_list = ff_make_format_list(pix_fmts);
+    if (!fmts_list) {
+      return AVERROR(ENOMEM);
+    }
+    return ff_set_common_formats(ctx, fmts_list);
 }
 
 static int activate(AVFilterContext *ctx)
