@@ -14,7 +14,8 @@ RUN apt-get install -y git gcc g++ make pkg-config \
 
 # Clone the pre-patched FFmpeg fork (pin to a specific commit for reproducibility)
 # Replace YOUR_ORG and YOUR_COMMIT_SHA with the actual fork org and commit SHA
-RUN git clone --branch gltransition https://github.com/lucemia/ffmpeg-source.git ffmpeg
+RUN git clone https://github.com/lucemia/ffmpeg-source.git ffmpeg && \
+    cd ffmpeg && git checkout d64ae77b3236a692ebd1ee94863f38dec417a97b
 
 RUN git clone https://github.com/transitive-bullshit/ffmpeg-gl-transition.git
 
