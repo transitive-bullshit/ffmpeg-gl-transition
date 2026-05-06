@@ -564,5 +564,5 @@ const AVFilter ff_vf_gltransition = {
   .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC,
   FILTER_INPUTS(gltransition_inputs),
   FILTER_OUTPUTS(gltransition_outputs),
-  FILTER_PIXFMTS(AV_PIX_FMT_YUV420P),
+  FILTER_PIXFMTS(AV_PIX_FMT_RGB24),
 };
