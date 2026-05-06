@@ -227,40 +227,36 @@ static void setup_vbo(GLTransitionContext *c)
   glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, 0, 0);
 }
 
+static void auto_alloc_tex(GLTransitionContext *c, GLuint *tex,
+                            GLenum unit, int w, int h,
+                            const char *uniform_name, int unit_idx)
+{
+  glGenTextures(1, tex);
+  glActiveTexture(unit);
+  glBindTexture(GL_TEXTURE_2D, *tex);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
+  glUniform1i(glGetUniformLocation(c->program, uniform_name), unit_idx);
+}
+
 static void setup_tex(AVFilterLink *fromLink)
 {
   AVFilterContext     *ctx = fromLink->dst;
-  GLTransitionContext *c = ctx->priv;
+  GLTransitionContext *c   = ctx->priv;
+  const int w  = fromLink->w, h  = fromLink->h;
+  const int hw = w / 2,       hh = h / 2;
 
-  { // from
-    glGenTextures(1, &c->from);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, c->from);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fromLink->w, fromLink->h, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
-
-    glUniform1i(glGetUniformLocation(c->program, "from"), 0);
-  }
-
-  { // to
-    glGenTextures(1, &c->to);
-    glActiveTexture(GL_TEXTURE0 + 1);
-    glBindTexture(GL_TEXTURE_2D, c->to);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fromLink->w, fromLink->h, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, NULL);
-
-    glUniform1i(glGetUniformLocation(c->program, "to"), 1);
-  }
+  auto_alloc_tex(c, &c->from_y, GL_TEXTURE0,     w,  h,  "from_y", 0);
+  auto_alloc_tex(c, &c->from_u, GL_TEXTURE0 + 1, hw, hh, "from_u", 1);
+  auto_alloc_tex(c, &c->from_v, GL_TEXTURE0 + 2, hw, hh, "from_v", 2);
+  auto_alloc_tex(c, &c->to_y,   GL_TEXTURE0 + 3, w,  h,  "to_y",   3);
+  auto_alloc_tex(c, &c->to_u,   GL_TEXTURE0 + 4, hw, hh, "to_u",   4);
+  auto_alloc_tex(c, &c->to_v,   GL_TEXTURE0 + 5, hw, hh, "to_v",   5);
 }
 
 static void setup_uniforms(AVFilterLink *fromLink)
