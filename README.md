@@ -85,7 +85,7 @@ export DISPLAY=:99
 ### Building ffmpeg
 
 ```bash
-git clone https://github.com/YOUR_ORG/ffmpeg.git ffmpeg
+git clone --branch gltransition https://github.com/lucemia/ffmpeg-source.git ffmpeg
 cd ffmpeg
 ```
 

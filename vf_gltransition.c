@@ -633,7 +633,7 @@ static const AVFilterPad gltransition_outputs[] = {
   },
 };
 
-const AVFilter ff_vf_gltransition = {
+const FFFilter ff_vf_gltransition = {
   .name          = "gltransition",
   .description   = NULL_IF_CONFIG_SMALL("OpenGL blend transitions"),
   .priv_size     = sizeof(GLTransitionContext),
