@@ -491,15 +491,6 @@ static av_cold void uninit(AVFilterContext *ctx) {
   }
 }
 
-static int query_formats(AVFilterContext *ctx)
-{
-  static const enum AVPixelFormat formats[] = {
-    AV_PIX_FMT_RGB24,
-    AV_PIX_FMT_NONE
-  };
-
-  return ff_set_common_formats(ctx, ff_make_format_list(formats));
-}
 
 static int activate(AVFilterContext *ctx)
 {
@@ -543,37 +534,35 @@ static int config_output(AVFilterLink *outLink)
 
 static const AVFilterPad gltransition_inputs[] = {
   {
-    .name = "from",
-    .type = AVMEDIA_TYPE_VIDEO,
+    .name         = "from",
+    .type         = AVMEDIA_TYPE_VIDEO,
     .config_props = setup_gl,
   },
   {
-    .name = "to",
-    .type = AVMEDIA_TYPE_VIDEO,
+    .name         = "to",
+    .type         = AVMEDIA_TYPE_VIDEO,
   },
-  {NULL}
 };
 
 static const AVFilterPad gltransition_outputs[] = {
   {
-    .name = "default",
-    .type = AVMEDIA_TYPE_VIDEO,
+    .name         = "default",
+    .type         = AVMEDIA_TYPE_VIDEO,
     .config_props = config_output,
   },
-  {NULL}
 };
 
-AVFilter ff_vf_gltransition = {
+const AVFilter ff_vf_gltransition = {
   .name          = "gltransition",
   .description   = NULL_IF_CONFIG_SMALL("OpenGL blend transitions"),
   .priv_size     = sizeof(GLTransitionContext),
   .preinit       = gltransition_framesync_preinit,
   .init          = init,
   .uninit        = uninit,
-  .query_formats = query_formats,
   .activate      = activate,
-  .inputs        = gltransition_inputs,
-  .outputs       = gltransition_outputs,
   .priv_class    = &gltransition_class,
-  .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC
+  .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC,
+  FILTER_INPUTS(gltransition_inputs),
+  FILTER_OUTPUTS(gltransition_outputs),
+  FILTER_PIXFMTS(AV_PIX_FMT_YUV420P),
 };
