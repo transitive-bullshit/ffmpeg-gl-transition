@@ -85,12 +85,8 @@ export DISPLAY=:99
 ### Building ffmpeg
 
 ```bash
-git clone http://source.ffmpeg.org/git/ffmpeg.git ffmpeg
+git clone https://github.com/YOUR_ORG/ffmpeg.git ffmpeg
 cd ffmpeg
-
-cp ~/ffmpeg-gl-transition/vf_gltransition.c libavfilter/
-git apply ~/ffmpeg-gl-transition/ffmpeg.diff
-
 ```
 
 Non-EGL:
@@ -102,7 +98,8 @@ make
 
 EGL:
 ```base
-./configure ... --extra-libs='-lGLEW -lEGL'
+./configure --enable-libx264 --enable-gpl --enable-opengl \
+            --enable-filter=gltransition --extra-libs='-lGLEW -lEGL -ldl'
 make
 ```
 
