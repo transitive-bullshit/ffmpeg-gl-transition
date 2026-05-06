@@ -34,7 +34,6 @@
 #define FROM (0)
 #define TO   (1)
 
-#define PIXEL_FORMAT (GL_RGB)
 
 #ifdef GL_TRANSITION_USING_EGL
 static const EGLint configAttribs[] = {
@@ -414,22 +413,43 @@ static AVFrame *apply_transition(FFFrameSync *fs,
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, c->from);
-  glPixelStorei(GL_UNPACK_ROW_LENGTH, fromFrame->linesize[0] / 3);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fromLink->w, fromLink->h, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, fromFrame->data[0]);
+  glBindTexture(GL_TEXTURE_2D, c->from_y);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, fromFrame->linesize[0]);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, fromLink->w, fromLink->h, GL_RED, GL_UNSIGNED_BYTE, fromFrame->data[0]);
 
   glActiveTexture(GL_TEXTURE0 + 1);
-  glBindTexture(GL_TEXTURE_2D, c->to);
-  glPixelStorei(GL_UNPACK_ROW_LENGTH, toFrame->linesize[0] / 3);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, toLink->w, toLink->h, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, toFrame->data[0]);
+  glBindTexture(GL_TEXTURE_2D, c->from_u);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, fromFrame->linesize[1]);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, fromLink->w/2, fromLink->h/2, GL_RED, GL_UNSIGNED_BYTE, fromFrame->data[1]);
+
+  glActiveTexture(GL_TEXTURE0 + 2);
+  glBindTexture(GL_TEXTURE_2D, c->from_v);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, fromFrame->linesize[2]);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, fromLink->w/2, fromLink->h/2, GL_RED, GL_UNSIGNED_BYTE, fromFrame->data[2]);
+
+  glActiveTexture(GL_TEXTURE0 + 3);
+  glBindTexture(GL_TEXTURE_2D, c->to_y);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, toFrame->linesize[0]);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, toLink->w, toLink->h, GL_RED, GL_UNSIGNED_BYTE, toFrame->data[0]);
+
+  glActiveTexture(GL_TEXTURE0 + 4);
+  glBindTexture(GL_TEXTURE_2D, c->to_u);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, toFrame->linesize[1]);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, toLink->w/2, toLink->h/2, GL_RED, GL_UNSIGNED_BYTE, toFrame->data[1]);
+
+  glActiveTexture(GL_TEXTURE0 + 5);
+  glBindTexture(GL_TEXTURE_2D, c->to_v);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, toFrame->linesize[2]);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, toLink->w/2, toLink->h/2, GL_RED, GL_UNSIGNED_BYTE, toFrame->data[2]);
+
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
   glDrawArrays(GL_TRIANGLES, 0, 6);
   glPixelStorei(GL_PACK_ROW_LENGTH, outFrame->linesize[0] / 3);
-  glReadPixels(0, 0, outLink->w, outLink->h, PIXEL_FORMAT, GL_UNSIGNED_BYTE, (GLvoid *)outFrame->data[0]);
+  glReadPixels(0, 0, outLink->w, outLink->h, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid *)outFrame->data[0]);
 
   glPixelStorei(GL_PACK_ROW_LENGTH, 0);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-  glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
   av_frame_free(&fromFrame);
 
@@ -590,5 +610,5 @@ const AVFilter ff_vf_gltransition = {
   .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC,
   FILTER_INPUTS(gltransition_inputs),
   FILTER_OUTPUTS(gltransition_outputs),
-  FILTER_PIXFMTS(AV_PIX_FMT_RGB24),
+  FILTER_PIXFMTS(AV_PIX_FMT_YUV420P),
 };
