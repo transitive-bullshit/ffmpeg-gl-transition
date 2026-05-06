@@ -134,6 +134,9 @@ typedef struct {
   // internal state
   GLuint        posBuf;
   GLuint        program;
+  GLuint        pbo[2];
+  int           pbo_index;
+  int           pbo_ready;
 #ifdef GL_TRANSITION_USING_EGL
   EGLDisplay eglDpy;
   EGLConfig eglCfg;
@@ -376,6 +379,16 @@ static int setup_gl(AVFilterLink *inLink)
   setup_uniforms(inLink);
   setup_tex(inLink);
 
+  const size_t pbo_size = (size_t)inLink->w * inLink->h * 3;
+  glGenBuffers(2, c->pbo);
+  for (int i = 0; i < 2; i++) {
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, c->pbo[i]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, pbo_size, NULL, GL_STREAM_READ);
+  }
+  glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+  c->pbo_index = 0;
+  c->pbo_ready = 0;
+
   return 0;
 }
 
@@ -445,11 +458,31 @@ static AVFrame *apply_transition(FFFrameSync *fs,
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
   glDrawArrays(GL_TRIANGLES, 0, 6);
-  glPixelStorei(GL_PACK_ROW_LENGTH, outFrame->linesize[0] / 3);
-  glReadPixels(0, 0, outLink->w, outLink->h, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid *)outFrame->data[0]);
 
+  glBindBuffer(GL_PIXEL_PACK_BUFFER, c->pbo[c->pbo_index]);
+  glPixelStorei(GL_PACK_ROW_LENGTH, outFrame->linesize[0] / 3);
+  glReadPixels(0, 0, outLink->w, outLink->h, GL_RGB, GL_UNSIGNED_BYTE, 0);
   glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+
+  const int prev = 1 - c->pbo_index;
+  if (c->pbo_ready) {
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, c->pbo[prev]);
+    GLubyte *ptr = (GLubyte *)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+    if (ptr) {
+      memcpy(outFrame->data[0], ptr, (size_t)outLink->h * outFrame->linesize[0]);
+      glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+    } else {
+      av_log(NULL, AV_LOG_WARNING, "gltransition: glMapBuffer returned NULL\n");
+    }
+  } else {
+    memset(outFrame->data[0], 0, (size_t)outLink->h * outFrame->linesize[0]);
+  }
+
+  glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+  c->pbo_index = prev;
+  c->pbo_ready = 1;
 
   av_frame_free(&fromFrame);
 
@@ -515,6 +548,7 @@ static av_cold void uninit(AVFilterContext *ctx) {
     glDeleteTextures(1, &c->to_u);
     glDeleteTextures(1, &c->to_v);
     glDeleteBuffers(1, &c->posBuf);
+    glDeleteBuffers(2, c->pbo);
     glDeleteProgram(c->program);
     eglTerminate(c->eglDpy);
   }
@@ -527,6 +561,7 @@ static av_cold void uninit(AVFilterContext *ctx) {
     glDeleteTextures(1, &c->to_u);
     glDeleteTextures(1, &c->to_v);
     glDeleteBuffers(1, &c->posBuf);
+    glDeleteBuffers(2, c->pbo);
     glDeleteProgram(c->program);
     glfwDestroyWindow(c->window);
   }
