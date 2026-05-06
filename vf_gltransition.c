@@ -7,6 +7,7 @@
 #include "libavutil/opt.h"
 #include "libavutil/mem.h"
 #include "filters.h"
+#include "formats.h"
 #include "framesync.h"
 #include "video.h"
 
@@ -281,7 +282,7 @@ static int build_program(AVFilterContext *ctx)
 
   const char *transition_source = source ? source : f_default_transition_source;
 
-  int len = strlen(f_shader_template) + strlen(f_yuv_preamble) + strlen(transition_source);
+  int len = strlen(f_shader_template) + strlen(f_yuv_preamble) + strlen(transition_source) + 1;
   c->f_shader_source = av_calloc(len, sizeof(*c->f_shader_source));
   if (!c->f_shader_source) {
     return AVERROR(ENOMEM);
@@ -701,6 +702,9 @@ static int activate(AVFilterContext *ctx)
   return ff_framesync_activate(&c->fs);
 }
 
+static const enum AVPixelFormat gltransition_in_fmts[]  = { AV_PIX_FMT_YUV420P, AV_PIX_FMT_NONE };
+static const enum AVPixelFormat gltransition_out_fmts[] = { AV_PIX_FMT_RGB24,   AV_PIX_FMT_NONE };
+
 static int config_output(AVFilterLink *outLink)
 {
   AVFilterContext *ctx = outLink->src;
@@ -708,6 +712,17 @@ static int config_output(AVFilterLink *outLink)
   AVFilterLink *fromLink = ctx->inputs[FROM];
   AVFilterLink *toLink = ctx->inputs[TO];
   int ret;
+
+  // Per-pad format negotiation: inputs accept YUV420P, output accepts RGB24
+  if ((ret = ff_formats_ref(ff_make_format_list((const int *)gltransition_in_fmts),
+                            &ctx->inputs[FROM]->outcfg.formats)) < 0)
+    return ret;
+  if ((ret = ff_formats_ref(ff_make_format_list((const int *)gltransition_in_fmts),
+                            &ctx->inputs[TO]->outcfg.formats)) < 0)
+    return ret;
+  if ((ret = ff_formats_ref(ff_make_format_list((const int *)gltransition_out_fmts),
+                            &outLink->incfg.formats)) < 0)
+    return ret;
 
   if (fromLink->format != toLink->format) {
     av_log(ctx, AV_LOG_ERROR, "inputs must be of same pixel format\n");
@@ -767,5 +782,4 @@ const FFFilter ff_vf_gltransition = {
   .activate      = activate,
   FILTER_INPUTS(gltransition_inputs),
   FILTER_OUTPUTS(gltransition_outputs),
-  FILTER_PIXFMTS(AV_PIX_FMT_YUV420P),
 };
