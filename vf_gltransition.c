@@ -61,24 +61,45 @@ static const GLchar *v_shader_source =
 
 static const GLchar *f_shader_template =
   "varying vec2 _uv;\n"
-  "uniform sampler2D from;\n"
-  "uniform sampler2D to;\n"
   "uniform float progress;\n"
   "uniform float ratio;\n"
   "uniform float _fromR;\n"
   "uniform float _toR;\n"
-  "\n"
-  "vec4 getFromColor(vec2 uv) {\n"
-  "  return texture2D(from, vec2(uv.x, 1.0 - uv.y));\n"
-  "}\n"
-  "\n"
-  "vec4 getToColor(vec2 uv) {\n"
-  "  return texture2D(to, vec2(uv.x, 1.0 - uv.y));\n"
-  "}\n"
-  "\n"
+  "\n%s\n"
   "\n%s\n"
   "void main() {\n"
   "  gl_FragColor = transition(_uv);\n"
+  "}\n";
+
+static const GLchar *f_yuv_preamble =
+  "uniform sampler2D from_y, from_u, from_v;\n"
+  "uniform sampler2D to_y,   to_u,   to_v;\n"
+  "\n"
+  "vec4 yuv2rgb(float y, float u, float v) {\n"
+  "  return vec4(\n"
+  "    y + 1.402   * (v - 0.5),\n"
+  "    y - 0.344   * (u - 0.5) - 0.714 * (v - 0.5),\n"
+  "    y + 1.772   * (u - 0.5),\n"
+  "    1.0\n"
+  "  );\n"
+  "}\n"
+  "\n"
+  "vec4 getFromColor(vec2 uv) {\n"
+  "  vec2 f = vec2(uv.x, 1.0 - uv.y);\n"
+  "  return yuv2rgb(\n"
+  "    texture2D(from_y, f).r,\n"
+  "    texture2D(from_u, f).r,\n"
+  "    texture2D(from_v, f).r\n"
+  "  );\n"
+  "}\n"
+  "\n"
+  "vec4 getToColor(vec2 uv) {\n"
+  "  vec2 f = vec2(uv.x, 1.0 - uv.y);\n"
+  "  return yuv2rgb(\n"
+  "    texture2D(to_y, f).r,\n"
+  "    texture2D(to_u, f).r,\n"
+  "    texture2D(to_v, f).r\n"
+  "  );\n"
   "}\n";
 
 // default to a basic fade effect
@@ -187,13 +208,14 @@ static int build_program(AVFilterContext *ctx)
 
   const char *transition_source = source ? source : f_default_transition_source;
 
-  int len = strlen(f_shader_template) + strlen(transition_source);
+  int len = strlen(f_shader_template) + strlen(f_yuv_preamble) + strlen(transition_source);
   c->f_shader_source = av_calloc(len, sizeof(*c->f_shader_source));
   if (!c->f_shader_source) {
     return AVERROR(ENOMEM);
   }
 
-  snprintf(c->f_shader_source, len * sizeof(*c->f_shader_source), f_shader_template, transition_source);
+  snprintf(c->f_shader_source, len * sizeof(*c->f_shader_source),
+           f_shader_template, f_yuv_preamble, transition_source);
   av_log(ctx, AV_LOG_DEBUG, "\n%s\n", c->f_shader_source);
 
   if (source) {
