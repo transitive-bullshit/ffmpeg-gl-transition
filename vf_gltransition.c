@@ -104,8 +104,8 @@ typedef struct {
   int64_t first_pts;
 
   // uniforms
-  GLuint        from;
-  GLuint        to;
+  GLuint        from_y, from_u, from_v;
+  GLuint        to_y, to_u, to_v;
   GLint         progress;
   GLint         ratio;
   GLint         _fromR;
@@ -470,16 +470,24 @@ static av_cold void uninit(AVFilterContext *ctx) {
 
 #ifdef GL_TRANSITION_USING_EGL
   if (c->eglDpy) {
-    glDeleteTextures(1, &c->from);
-    glDeleteTextures(1, &c->to);
+    glDeleteTextures(1, &c->from_y);
+    glDeleteTextures(1, &c->from_u);
+    glDeleteTextures(1, &c->from_v);
+    glDeleteTextures(1, &c->to_y);
+    glDeleteTextures(1, &c->to_u);
+    glDeleteTextures(1, &c->to_v);
     glDeleteBuffers(1, &c->posBuf);
     glDeleteProgram(c->program);
     eglTerminate(c->eglDpy);
   }
 #else
   if (c->window) {
-    glDeleteTextures(1, &c->from);
-    glDeleteTextures(1, &c->to);
+    glDeleteTextures(1, &c->from_y);
+    glDeleteTextures(1, &c->from_u);
+    glDeleteTextures(1, &c->from_v);
+    glDeleteTextures(1, &c->to_y);
+    glDeleteTextures(1, &c->to_u);
+    glDeleteTextures(1, &c->to_v);
     glDeleteBuffers(1, &c->posBuf);
     glDeleteProgram(c->program);
     glfwDestroyWindow(c->window);
