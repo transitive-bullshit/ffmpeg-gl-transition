@@ -5,9 +5,10 @@
  */
 
 #include "libavutil/opt.h"
+#include "libavutil/mem.h"
 #include "filters.h"
-#include "internal.h"
 #include "framesync.h"
+#include "video.h"
 
 #ifndef __APPLE__
 # define GL_TRANSITION_USING_EGL //remove this line if you don't want to use EGL
@@ -16,7 +17,11 @@
 #ifdef __APPLE__
 # define __gl_h_
 # define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
+# define GL_SILENCE_DEPRECATION
 # include <OpenGL/gl3.h>
+# include <OpenGL/OpenGL.h>
+# include <OpenGL/CGLTypes.h>
+# include <OpenGL/CGLContext.h>
 #else
 # include <GL/glew.h>
 #endif
@@ -24,7 +29,7 @@
 #ifdef GL_TRANSITION_USING_EGL
 # include <EGL/egl.h>
 # include <EGL/eglext.h>
-#else
+#elif !defined(__APPLE__)
 # include <GLFW/glfw3.h>
 #endif
 
@@ -50,6 +55,32 @@ static const float position[12] = {
   -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f
 };
 
+#ifdef __APPLE__
+// macOS CGL uses Core Profile 3.2 which requires GLSL 1.50
+static const GLchar *v_shader_source =
+  "#version 150\n"
+  "in vec2 position;\n"
+  "out vec2 _uv;\n"
+  "void main(void) {\n"
+  "  gl_Position = vec4(position, 0, 1);\n"
+  "  vec2 uv = position * 0.5 + 0.5;\n"
+  "  _uv = vec2(uv.x, 1.0 - uv.y);\n"
+  "}\n";
+
+static const GLchar *f_shader_template =
+  "#version 150\n"
+  "in vec2 _uv;\n"
+  "out vec4 fragColor;\n"
+  "uniform float progress;\n"
+  "uniform float ratio;\n"
+  "uniform float _fromR;\n"
+  "uniform float _toR;\n"
+  "\n%s\n"
+  "\n%s\n"
+  "void main() {\n"
+  "  fragColor = transition(_uv);\n"
+  "}\n";
+#else
 static const GLchar *v_shader_source =
   "attribute vec2 position;\n"
   "varying vec2 _uv;\n"
@@ -70,7 +101,41 @@ static const GLchar *f_shader_template =
   "void main() {\n"
   "  gl_FragColor = transition(_uv);\n"
   "}\n";
+#endif
 
+#ifdef __APPLE__
+// GLSL 1.50 core profile preamble (no texture2D, use texture())
+static const GLchar *f_yuv_preamble =
+  "uniform sampler2D from_y, from_u, from_v;\n"
+  "uniform sampler2D to_y,   to_u,   to_v;\n"
+  "\n"
+  "vec4 yuv2rgb(float y, float u, float v) {\n"
+  "  return vec4(\n"
+  "    y + 1.402   * (v - 0.5),\n"
+  "    y - 0.344   * (u - 0.5) - 0.714 * (v - 0.5),\n"
+  "    y + 1.772   * (u - 0.5),\n"
+  "    1.0\n"
+  "  );\n"
+  "}\n"
+  "\n"
+  "vec4 getFromColor(vec2 uv) {\n"
+  "  vec2 f = vec2(uv.x, 1.0 - uv.y);\n"
+  "  return yuv2rgb(\n"
+  "    texture(from_y, f).r,\n"
+  "    texture(from_u, f).r,\n"
+  "    texture(from_v, f).r\n"
+  "  );\n"
+  "}\n"
+  "\n"
+  "vec4 getToColor(vec2 uv) {\n"
+  "  vec2 f = vec2(uv.x, 1.0 - uv.y);\n"
+  "  return yuv2rgb(\n"
+  "    texture(to_y, f).r,\n"
+  "    texture(to_u, f).r,\n"
+  "    texture(to_v, f).r\n"
+  "  );\n"
+  "}\n";
+#else
 static const GLchar *f_yuv_preamble =
   "uniform sampler2D from_y, from_u, from_v;\n"
   "uniform sampler2D to_y,   to_u,   to_v;\n"
@@ -101,6 +166,7 @@ static const GLchar *f_yuv_preamble =
   "    texture2D(to_v, f).r\n"
   "  );\n"
   "}\n";
+#endif
 
 // default to a basic fade effect
 static const GLchar *f_default_transition_source =
@@ -133,6 +199,7 @@ typedef struct {
   GLint         _toR;
 
   // internal state
+  GLuint        vao;
   GLuint        posBuf;
   GLuint        program;
   GLuint        pbo[2];
@@ -143,6 +210,9 @@ typedef struct {
   EGLConfig eglCfg;
   EGLSurface eglSurf;
   EGLContext eglCtx;
+#elif defined(__APPLE__)
+  CGLContextObj cglCtx;
+  CGLPixelFormatObj cglPixFmt;
 #else
   GLFWwindow    *window;
 #endif
@@ -243,6 +313,12 @@ static int build_program(AVFilterContext *ctx)
 
 static void setup_vbo(GLTransitionContext *c)
 {
+#ifdef __APPLE__
+  // Core Profile 3.2 requires a VAO
+  glGenVertexArrays(1, &c->vao);
+  glBindVertexArray(c->vao);
+#endif
+
   glGenBuffers(1, &c->posBuf);
   glBindBuffer(GL_ARRAY_BUFFER, c->posBuf);
   glBufferData(GL_ARRAY_BUFFER, sizeof(position), position, GL_STATIC_DRAW);
@@ -350,9 +426,36 @@ static int setup_gl(AVFilterLink *inLink)
   // 5. Create a context and make it current
   c->eglCtx = eglCreateContext(c->eglDpy, c->eglCfg, EGL_NO_CONTEXT, NULL);
   eglMakeCurrent(c->eglDpy, c->eglSurf, c->eglSurf, c->eglCtx);
+
+#elif defined(__APPLE__)
+  // Use CGL for offscreen OpenGL on macOS — works on any thread, no NSWindow needed.
+  CGLPixelFormatAttribute attribs[] = {
+    kCGLPFAOpenGLProfile, (CGLPixelFormatAttribute)kCGLOGLPVersion_3_2_Core,
+    kCGLPFAColorSize,     (CGLPixelFormatAttribute)24,
+    kCGLPFAAlphaSize,     (CGLPixelFormatAttribute)8,
+    kCGLPFAAccelerated,
+    kCGLPFANoRecovery,
+    (CGLPixelFormatAttribute)0
+  };
+  GLint npix = 0;
+  CGLError err = CGLChoosePixelFormat(attribs, &c->cglPixFmt, &npix);
+  if (err != kCGLNoError || !c->cglPixFmt) {
+    av_log(ctx, AV_LOG_ERROR, "CGLChoosePixelFormat failed: %d\n", err);
+    return -1;
+  }
+  err = CGLCreateContext(c->cglPixFmt, NULL, &c->cglCtx);
+  if (err != kCGLNoError || !c->cglCtx) {
+    av_log(ctx, AV_LOG_ERROR, "CGLCreateContext failed: %d\n", err);
+    return -1;
+  }
+  err = CGLSetCurrentContext(c->cglCtx);
+  if (err != kCGLNoError) {
+    av_log(ctx, AV_LOG_ERROR, "CGLSetCurrentContext failed: %d\n", err);
+    return -1;
+  }
+
 #else
   //glfw
-
   glfwWindowHint(GLFW_VISIBLE, 0);
   c->window = glfwCreateWindow(inLink->w, inLink->h, "", NULL, NULL);
   if (!c->window) {
@@ -360,7 +463,6 @@ static int setup_gl(AVFilterLink *inLink)
     return -1;
   }
   glfwMakeContextCurrent(c->window);
-
 #endif
 
 #ifndef __APPLE__
@@ -413,6 +515,8 @@ static AVFrame *apply_transition(FFFrameSync *fs,
 
 #ifdef GL_TRANSITION_USING_EGL
   eglMakeCurrent(c->eglDpy, c->eglSurf, c->eglSurf, c->eglCtx);
+#elif defined(__APPLE__)
+  CGLSetCurrentContext(c->cglCtx);
 #else
   glfwMakeContextCurrent(c->window);
 #endif
@@ -458,6 +562,9 @@ static AVFrame *apply_transition(FFFrameSync *fs,
 
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
+#ifdef __APPLE__
+  glBindVertexArray(c->vao);
+#endif
   glDrawArrays(GL_TRIANGLES, 0, 6);
 
   glBindBuffer(GL_PIXEL_PACK_BUFFER, c->pbo[c->pbo_index]);
@@ -525,10 +632,8 @@ static av_cold int init(AVFilterContext *ctx)
   c->fs.on_event = blend_frame;
   c->first_pts = AV_NOPTS_VALUE;
 
-
-#ifndef GL_TRANSITION_USING_EGL
-  if (!glfwInit())
-  {
+#if !defined(GL_TRANSITION_USING_EGL) && !defined(__APPLE__)
+  if (!glfwInit()) {
     return -1;
   }
 #endif
@@ -552,6 +657,22 @@ static av_cold void uninit(AVFilterContext *ctx) {
     glDeleteBuffers(2, c->pbo);
     glDeleteProgram(c->program);
     eglTerminate(c->eglDpy);
+  }
+#elif defined(__APPLE__)
+  if (c->cglCtx) {
+    glDeleteTextures(1, &c->from_y);
+    glDeleteTextures(1, &c->from_u);
+    glDeleteTextures(1, &c->from_v);
+    glDeleteTextures(1, &c->to_y);
+    glDeleteTextures(1, &c->to_u);
+    glDeleteTextures(1, &c->to_v);
+    glDeleteBuffers(1, &c->posBuf);
+    glDeleteBuffers(2, c->pbo);
+    glDeleteVertexArrays(1, &c->vao);
+    glDeleteProgram(c->program);
+    CGLSetCurrentContext(NULL);
+    CGLDestroyContext(c->cglCtx);
+    CGLReleasePixelFormat(c->cglPixFmt);
   }
 #else
   if (c->window) {
@@ -605,7 +726,7 @@ static int config_output(AVFilterLink *outLink)
   outLink->w = fromLink->w;
   outLink->h = fromLink->h;
   // outLink->time_base = fromLink->time_base;
-  outLink->frame_rate = fromLink->frame_rate;
+  ff_filter_link(outLink)->frame_rate = ff_filter_link(fromLink)->frame_rate;
 
   if ((ret = ff_framesync_init_dualinput(&c->fs, ctx)) < 0) {
     return ret;
